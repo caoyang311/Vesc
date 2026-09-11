@@ -1,0 +1,1 @@
+Simulink.importExternalCTypes('trajectory_ctrl.h');

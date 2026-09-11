@@ -1,0 +1,10 @@
+.\objects\arm_common_tables.o: ..\DSP\src\arm_common_tables.c
+.\objects\arm_common_tables.o: ..\DSP\inc\arm_math.h
+.\objects\arm_common_tables.o: ..\CORE\core_cm4.h
+.\objects\arm_common_tables.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\objects\arm_common_tables.o: ..\CORE\core_cmInstr.h
+.\objects\arm_common_tables.o: ..\CORE\core_cmFunc.h
+.\objects\arm_common_tables.o: ..\CORE\core_cm4_simd.h
+.\objects\arm_common_tables.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\objects\arm_common_tables.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+.\objects\arm_common_tables.o: ..\DSP\inc\arm_common_tables.h

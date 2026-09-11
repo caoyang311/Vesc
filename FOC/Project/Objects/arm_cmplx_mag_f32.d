@@ -1,0 +1,9 @@
+.\objects\arm_cmplx_mag_f32.o: ..\DSP\src\arm_cmplx_mag_f32.c
+.\objects\arm_cmplx_mag_f32.o: ..\DSP\inc\arm_math.h
+.\objects\arm_cmplx_mag_f32.o: ..\Core\core_cm4.h
+.\objects\arm_cmplx_mag_f32.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\objects\arm_cmplx_mag_f32.o: ..\Core\core_cmInstr.h
+.\objects\arm_cmplx_mag_f32.o: ..\Core\core_cmFunc.h
+.\objects\arm_cmplx_mag_f32.o: ..\Core\core_cm4_simd.h
+.\objects\arm_cmplx_mag_f32.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\objects\arm_cmplx_mag_f32.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h

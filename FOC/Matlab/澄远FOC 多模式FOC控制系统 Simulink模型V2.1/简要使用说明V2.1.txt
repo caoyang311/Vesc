@@ -1,0 +1,29 @@
+1，目录说明
+	- mmcs：多模式FOC控制系统模型
+	- sfunction：模型用到的s函数源码
+
+2，MATLAB版本：2021b
+
+3，打开模型注意事项
+	- MATLAB首页，请先将“当前文件夹”更改为mmcs_s2f.slx所在文件夹，否则初始化脚本会出错
+	- 若“当前文件夹”未更改，打开mmcs_s2f.slx时报错，请先关闭mmcs_s2f.slx，更改“当前文件夹”后再打开
+
+4，系统控制模式
+	- 信号对象：sys_ctrl_mode
+	- 在数据字典中定义
+
+4.1 支持的系统控制模式
+	- ENC_ST_CTRL（默认）：基于编码器的速度-电流双闭环控制
+	- IF_CTRL：IF启动
+	- STO_ST_CTRL：基于观测器+PLL的速度-电流双闭环控制（无感控制）
+	- ENC_PT_CTRL：基于编码器的位置-电流双闭环控制
+	- HALL_ST_CTRL：基于HALL的速度-电流双闭环控制
+	- 以上模式均在数据字典中定义
+
+4.2 切换系统控制模式
+	- 默认设置：sys_ctrl_mode = ENC_ST_CTRL
+	- 需要切换系统控制模式时，可在数据字典中修改sys_ctrl_mode初始值为以上支持的系统控制模式之一
+
+5，位置控制手动操作说明
+	- 切换motor_start关联的Toggle Switch为On状态
+	- 手动切换Manual Switch1在[0，60*pi]之间移动

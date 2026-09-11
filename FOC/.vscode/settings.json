@@ -1,0 +1,23 @@
+{
+    "files.associations": {
+        "math.h": "c",
+        "stm32f4xx.h": "c",
+        "motor.h": "c",
+        "uart.h": "c",
+        "debug.h": "c",
+        "usbd_cdc_vcp.h": "c",
+        "foc.h": "c",
+        "pid.h": "c",
+        "encoder.h": "c",
+        "key.h": "c",
+        "led.h": "c",
+        "stm32f4xx_usart.h": "c",
+        "abs_encoder.h": "c",
+        "rtwtypes.h": "c",
+        "gpio.h": "c",
+        "parameter_identify.h": "c",
+        "motor_pmsm.h": "c",
+        "arm_const_structs.h": "c",
+        "stdlib.h": "c"
+    }
+}

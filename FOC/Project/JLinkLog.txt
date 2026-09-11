@@ -1,0 +1,8 @@
+T3D50 000:247.486   SEGGER J-Link V7.60 Log File
+T3D50 000:248.059   DLL Compiled: Dec 14 2021 11:35:29
+T3D50 000:248.068   Logging started @ 2023-11-24 04:36
+T3D50 000:248.076 - 248.080ms
+T3D50 000:248.097 JLINK_SetWarnOutHandler(...)
+T3D50 000:248.376 - 0.283ms
+T3D50 000:248.396 JLINK_OpenEx(...)
+T3D50 000:253.705   Out of sync , resynchronizing...
