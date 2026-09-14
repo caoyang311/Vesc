@@ -59,6 +59,30 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define TIM_CLK_MHz 168
 #define PWM_FREQUENCY 10000
+#define PM1_CTRL_SD_Pin GPIO_PIN_10
+#define PM1_CTRL_SD_GPIO_Port GPIOF
+#define PM1_VTEMP_Pin GPIO_PIN_0
+#define PM1_VTEMP_GPIO_Port GPIOA
+#define PM1_AMPW_Pin GPIO_PIN_3
+#define PM1_AMPW_GPIO_Port GPIOA
+#define PM1_AMPV_Pin GPIO_PIN_6
+#define PM1_AMPV_GPIO_Port GPIOA
+#define PM1_AMPU_Pin GPIO_PIN_0
+#define PM1_AMPU_GPIO_Port GPIOB
+#define PM1_VBUS_Pin GPIO_PIN_1
+#define PM1_VBUS_GPIO_Port GPIOB
+#define PM1_PWM_UL_Pin GPIO_PIN_13
+#define PM1_PWM_UL_GPIO_Port GPIOB
+#define PM1_PWM_VL_Pin GPIO_PIN_14
+#define PM1_PWM_VL_GPIO_Port GPIOB
+#define PM1_PWM_WL_Pin GPIO_PIN_15
+#define PM1_PWM_WL_GPIO_Port GPIOB
+#define PM1_PWM_UH_Pin GPIO_PIN_8
+#define PM1_PWM_UH_GPIO_Port GPIOA
+#define PM1_PWM_VH_Pin GPIO_PIN_9
+#define PM1_PWM_VH_GPIO_Port GPIOA
+#define PM1_PWM_WH_Pin GPIO_PIN_10
+#define PM1_PWM_WH_GPIO_Port GPIOA
 #define LED0_Pin GPIO_PIN_0
 #define LED0_GPIO_Port GPIOE
 
