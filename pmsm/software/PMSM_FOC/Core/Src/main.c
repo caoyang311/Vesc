@@ -23,6 +23,7 @@
 #include "iwdg.h"
 #include "tim.h"
 #include "gpio.h"
+#include "Driver_Test.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -96,6 +97,8 @@ int main(void)
   MX_ADC1_Init();
   MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
+
+  Driver_Test_Run();
 
   /* USER CODE END 2 */
 
