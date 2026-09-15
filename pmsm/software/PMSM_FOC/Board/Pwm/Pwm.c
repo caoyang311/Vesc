@@ -22,9 +22,6 @@ static void Pwm_Start_W_PWM(void);
 static void Pwm_Stop_U_PWM(void);
 static void Pwm_Stop_V_PWM(void);
 static void Pwm_Stop_W_PWM(void);
-static void Pwm_Set_U_CCR(uint16_t value);
-static void Pwm_Set_V_CCR(uint16_t value);
-static void Pwm_Set_W_CCR(uint16_t value);
 
 /*
  * @brief 打开PWM互补输出
@@ -111,37 +108,6 @@ static void Pwm_Stop_V_PWM(void)
 static void Pwm_Stop_W_PWM(void)
 {
   Pwm_StopPWM(PWM_PHASE_W);
-}
-
-/*
- * @brief 设置U相PWM占空比
- * 
- * @param value PWM占空比
- * @return void
- */
-static void Pwm_Set_U_CCR(uint16_t value)
-{
-  Pwm_SetCCR(PWM_PHASE_U, value);
-}
-/*
- * @brief 设置V相PWM占空比
- * 
- * @param value PWM占空比
- * @return void
- */
-static void Pwm_Set_V_CCR(uint16_t value)
-{
-  Pwm_SetCCR(PWM_PHASE_V, value);
-}
-/*
- * @brief 设置W相PWM占空比
- * 
- * @param value PWM占空比
- * @return void
- */
-static void Pwm_Set_W_CCR(uint16_t value)
-{
-  Pwm_SetCCR(PWM_PHASE_W, value);
 }
 
 /**
