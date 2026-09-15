@@ -59,6 +59,12 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define TIM_CLK_MHz 168
 #define PWM_FREQUENCY 10000
+#define KEY0_Pin GPIO_PIN_2
+#define KEY0_GPIO_Port GPIOE
+#define KEY1_Pin GPIO_PIN_3
+#define KEY1_GPIO_Port GPIOE
+#define KEY2_Pin GPIO_PIN_4
+#define KEY2_GPIO_Port GPIOE
 #define PM1_CTRL_SD_Pin GPIO_PIN_10
 #define PM1_CTRL_SD_GPIO_Port GPIOF
 #define PM1_VTEMP_Pin GPIO_PIN_0
@@ -85,6 +91,8 @@ void Error_Handler(void);
 #define PM1_PWM_WH_GPIO_Port GPIOA
 #define LED0_Pin GPIO_PIN_0
 #define LED0_GPIO_Port GPIOE
+#define LED1_Pin GPIO_PIN_1
+#define LED1_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
 

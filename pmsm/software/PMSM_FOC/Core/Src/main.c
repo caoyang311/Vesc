@@ -23,11 +23,6 @@
 #include "iwdg.h"
 #include "tim.h"
 #include "gpio.h"
-#include "reset.h"
-#include "time.h"
-#include "watchdog.h"
-#include "verify.h"
-#include "power_stage.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -83,8 +78,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  Reset_Init();
-  Reset_ClearFlags();
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -101,15 +95,8 @@ int main(void)
   MX_IWDG_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
-
   /* USER CODE BEGIN 2 */
-  Watchdog_Init();
-  Watchdog_RegisterHeartbeat(WATCHDOG_SERVICE_MAIN_LOOP);
-  Watchdog_RegisterHeartbeat(WATCHDOG_SERVICE_TIME_BASE);
-  PowerStage_Init();
-  Verify_Init();
-  Verify_Start();
-  (void)PowerStage_ScopeVerificationStart();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -119,11 +106,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    (void)Time_GetTickMs();
-    Watchdog_Alive(WATCHDOG_SERVICE_MAIN_LOOP);
-    Watchdog_Alive(WATCHDOG_SERVICE_TIME_BASE);
-    Watchdog_MainFunction();
-    Verify_MainFunction();
   }
   /* USER CODE END 3 */
 }

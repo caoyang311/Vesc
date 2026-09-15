@@ -45,11 +45,19 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Pwm/Pwm.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Core/reset.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Watchdog/watchdog.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dio/Dio.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Pwm/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Core/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Watchdog/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dio/
 )
 
 # Add project symbols (macros)
