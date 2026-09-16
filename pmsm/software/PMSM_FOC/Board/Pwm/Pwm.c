@@ -31,8 +31,24 @@ static void Pwm_Stop_W_PWM(void);
  */
 static void Pwm_StartPWM(Pwm_Phase phase)
 {
-   HAL_TIM_PWM_Start(&htim1, phase);
-   HAL_TIMEx_PWMN_Start(&htim1, phase);
+  switch (phase)
+  {
+    case PWM_PHASE_U:
+      HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+      HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
+      break;
+    case PWM_PHASE_V:
+      HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+      HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
+      break;
+    case PWM_PHASE_W:
+      HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+      HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
+      break;
+    default:
+      break;
+  }
+
 }
 /*
  * @brief 关闭PWM互补输出
@@ -42,8 +58,23 @@ static void Pwm_StartPWM(Pwm_Phase phase)
  */
 static void Pwm_StopPWM(Pwm_Phase phase)
 {
-  HAL_TIM_PWM_Stop(&htim1, phase);
-  HAL_TIMEx_PWMN_Stop(&htim1, phase);
+  switch (phase)
+  {
+    case PWM_PHASE_U:
+      HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+      HAL_TIMEx_PWMN_Stop(&htim1, TIM_CHANNEL_1);
+      break;
+    case PWM_PHASE_V:
+      HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+      HAL_TIMEx_PWMN_Stop(&htim1, TIM_CHANNEL_2);
+      break;
+    case PWM_PHASE_W:
+      HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_3);
+      HAL_TIMEx_PWMN_Stop(&htim1, TIM_CHANNEL_3);
+      break;
+    default:
+      break;
+  }
 }
 /*
  * @brief 设置PWM占空比
@@ -53,7 +84,20 @@ static void Pwm_StopPWM(Pwm_Phase phase)
  */
 static void Pwm_SetCCR(Pwm_Phase phase, uint16_t value)
 {
-  __HAL_TIM_SET_COMPARE(&htim1, phase, value);
+  switch (phase)
+  {
+    case PWM_PHASE_U:
+      __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, value);
+      break;
+    case PWM_PHASE_V:
+      __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, value);
+      break;
+    case PWM_PHASE_W:
+      __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, value);
+      break;
+    default:
+      break;
+  }
 }
 /**
  * @brief 打开U相PWM输出

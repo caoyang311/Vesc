@@ -16,7 +16,7 @@ static void Driver_Test_Pwm(void)
   Pwm_Set_UVW_CCR(2100U, 4200U, 6300U);
   Pwm_Start();
   Pwm_StartAdcTrigger();
-  Pwm_StopAdcTrigger();
+  //Pwm_StopAdcTrigger();
   //Pwm_Stop();
 }
 
