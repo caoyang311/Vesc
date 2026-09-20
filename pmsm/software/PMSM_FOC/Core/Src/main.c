@@ -109,6 +109,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    Driver_Test_Loop();
     Watchdog_Refresh();
   }
   /* USER CODE END 3 */

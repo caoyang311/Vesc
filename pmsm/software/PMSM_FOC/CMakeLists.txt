@@ -50,6 +50,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Watchdog/watchdog.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dio/Dio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Driver_Test/Driver_Test.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Adc/Board_Adc.c
 )
 
 # Add include paths
@@ -60,6 +61,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Watchdog/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dio/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Driver_Test/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Adc/
 )
 
 # Add project symbols (macros)
