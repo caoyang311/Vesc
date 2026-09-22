@@ -22,12 +22,14 @@
 #include "dma.h"
 #include "iwdg.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
-#include "Driver_Test.h"
-#include "Watchdog.h"
+#include "Uart1.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "Driver_Test.h"
+#include "Watchdog.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,8 +98,10 @@ int main(void)
   MX_IWDG_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  Uart1_Init();
   Driver_Test_Run();
 
   /* USER CODE END 2 */
