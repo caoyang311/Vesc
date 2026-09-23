@@ -30,6 +30,7 @@
 /* USER CODE BEGIN Includes */
 #include "Driver_Test.h"
 #include "Watchdog.h"
+#include "Uart1.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
