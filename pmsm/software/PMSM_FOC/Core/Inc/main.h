@@ -65,6 +65,10 @@ void Error_Handler(void);
 #define KEY1_GPIO_Port GPIOE
 #define KEY2_Pin GPIO_PIN_4
 #define KEY2_GPIO_Port GPIOE
+#define MAX_485_EN_Pin GPIO_PIN_10
+#define MAX_485_EN_GPIO_Port GPIOI
+#define BEEP_Pin GPIO_PIN_0
+#define BEEP_GPIO_Port GPIOF
 #define PM1_CTRL_SD_Pin GPIO_PIN_10
 #define PM1_CTRL_SD_GPIO_Port GPIOF
 #define PM1_VTEMP_Pin GPIO_PIN_0
