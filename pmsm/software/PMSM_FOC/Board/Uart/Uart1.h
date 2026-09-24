@@ -15,7 +15,7 @@ extern "C" {
 /**
  * @brief UART1 模块操作结果。
  */
-#define UART1_RX_MESSAGE_MAX_LENGTH (256U)
+#define UART1_RX_MESSAGE_MAX_LENGTH (64U) /** @brief 接收消息最大长度，单位为字节 */
 
 typedef enum
 {
@@ -29,8 +29,8 @@ typedef enum
 
 typedef struct
 {
-    uint16_t Length;
-    uint8_t Data[UART1_RX_MESSAGE_MAX_LENGTH];
+    uint8_t Length; /** @brief 数据长度，单位为字节 */
+    uint8_t Data[UART1_RX_MESSAGE_MAX_LENGTH]; /** @brief 数据缓冲区 */
 } Uart1_MessageType;
 
 /**
@@ -59,13 +59,6 @@ Uart1_ResultType Uart1_ReceiveMessage(Uart1_MessageType *Message);
  * @return 当前待处理消息数量。
  */
 uint16_t Uart1_GetReceivedMessageCount(void);
-
-/**
- * @brief 处理 UART1 DMA 空闲接收事件。
- * @param[in] UartHandle UART 外设句柄。
- * @param[in] Length DMA 已接收数据长度。
- */
-void Uart1_HandleRxEvent(UART_HandleTypeDef *UartHandle, uint16_t Length);
 
 #ifdef __cplusplus
 }
