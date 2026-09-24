@@ -1,49 +1,57 @@
 /**
  * @file Uart1.c
- * @brief USART1 独立板级驱动实现。
+ * @brief USART1 DMA + IDLE 接收驱动实现。
  */
 #include "Uart1.h"
 
 #include "usart.h"
+#include "Max_485.h"
 
-#define UART1_RX_BUFFER_SIZE (128U)
+#define UART1_DMA_RX_BUFFER_SIZE       (256U)
+#define UART1_RX_MESSAGE_QUEUE_SIZE    (8U)
 
-#if (UART1_RX_BUFFER_SIZE > UINT16_MAX)
-#error "UART1_RX_BUFFER_SIZE exceeds uint16_t range"
+#if (UART1_DMA_RX_BUFFER_SIZE > UINT16_MAX)
+#error "UART1_DMA_RX_BUFFER_SIZE exceeds uint16_t range"
 #endif
 
-static uint8_t Uart1_RxByte = 0U;
-static uint8_t Uart1_RxBuffer[UART1_RX_BUFFER_SIZE] = {0U};
-static volatile uint16_t Uart1_RxWriteIndex = 0U;
-static volatile uint16_t Uart1_RxReadIndex = 0U;
-static volatile uint16_t Uart1_RxCount = 0U;
+#if (UART1_RX_MESSAGE_QUEUE_SIZE > UINT16_MAX)
+#error "UART1_RX_MESSAGE_QUEUE_SIZE exceeds uint16_t range"
+#endif
+
+
+
+static uint8_t Uart1_DmaRxBuffer[UART1_DMA_RX_BUFFER_SIZE] = {0U};
+static Uart1_MessageType Uart1_MessageQueue[UART1_RX_MESSAGE_QUEUE_SIZE] = {0};
+static volatile uint16_t Uart1_QueueWriteIndex = 0U;
+static volatile uint16_t Uart1_QueueReadIndex = 0U;
+static volatile uint16_t Uart1_QueueCount = 0U;
 static volatile uint8_t Uart1_Initialized = 0U;
 
-static void Uart1_ReceiveInterruptStart(void);
+static Uart1_ResultType Uart1_StartDmaReceive(void);
+static void Uart1_ResetDmaBuffer(void);
+static void Uart1_EnqueueMessage(const uint8_t *Data, uint16_t Length);
 
-/**
- * @brief 初始化 UART1 驱动并启动单字节接收中断。
- */
 void Uart1_Init(void)
 {
     uint16_t index = 0U;
 
-    for (index = 0U; index < UART1_RX_BUFFER_SIZE; index++)
+    for (index = 0U; index < UART1_DMA_RX_BUFFER_SIZE; index++)
     {
-        Uart1_RxBuffer[index] = 0U;
+        Uart1_DmaRxBuffer[index] = 0U;
     }
 
-    Uart1_RxByte = 0U;
-    Uart1_RxWriteIndex = 0U;
-    Uart1_RxReadIndex = 0U;
-    Uart1_RxCount = 0U;
+    for (index = 0U; index < UART1_RX_MESSAGE_QUEUE_SIZE; index++)
+    {
+        Uart1_MessageQueue[index].Length = 0U;
+    }
+
+    Uart1_QueueWriteIndex = 0U;
+    Uart1_QueueReadIndex = 0U;
+    Uart1_QueueCount = 0U;
     Uart1_Initialized = 1U;
-    Uart1_ReceiveInterruptStart();
+    (void)Uart1_StartDmaReceive();
 }
 
-/**
- * @brief 发送一段数据。
- */
 Uart1_ResultType Uart1_Send(const uint8_t *Data, uint16_t Length)
 {
     HAL_StatusTypeDef hal_result = HAL_ERROR;
@@ -73,92 +81,134 @@ Uart1_ResultType Uart1_Send(const uint8_t *Data, uint16_t Length)
     return result;
 }
 
-/**
- * @brief 从 UART1 接收环形缓冲区读取一个字节。
- */
-Uart1_ResultType Uart1_ReceiveByte(uint8_t *Data)
+Uart1_ResultType Uart1_ReceiveMessage(Uart1_MessageType *Message)
 {
     Uart1_ResultType result = UART1_RESULT_OK;
+    uint16_t index = 0U;
 
     if (Uart1_Initialized == 0U)
     {
         result = UART1_RESULT_NOT_INITIALIZED;
     }
-    else if (Data == (uint8_t *)0)
+    else if (Message == (Uart1_MessageType *)0)
     {
         result = UART1_RESULT_INVALID_PARAMETER;
     }
-    else if (Uart1_RxCount == 0U)
+    else if (Uart1_QueueCount == 0U)
     {
         result = UART1_RESULT_NO_DATA;
     }
     else
     {
-        *Data = Uart1_RxBuffer[Uart1_RxReadIndex];
-        Uart1_RxReadIndex++;
-        if (Uart1_RxReadIndex >= UART1_RX_BUFFER_SIZE)
+        Message->Length = Uart1_MessageQueue[Uart1_QueueReadIndex].Length;
+        for (index = 0U; index < Message->Length; index++)
         {
-            Uart1_RxReadIndex = 0U;
+            Message->Data[index] = Uart1_MessageQueue[Uart1_QueueReadIndex].Data[index];
         }
-        Uart1_RxCount--;
-        result = UART1_RESULT_OK;
+        Uart1_MessageQueue[Uart1_QueueReadIndex].Length = 0U;
+        Uart1_QueueReadIndex++;
+        if (Uart1_QueueReadIndex >= UART1_RX_MESSAGE_QUEUE_SIZE)
+        {
+            Uart1_QueueReadIndex = 0U;
+        }
+        Uart1_QueueCount--;
     }
 
     return result;
 }
 
-/**
- * @brief 获取 UART1 接收缓冲区中的字节数。
- */
-uint16_t Uart1_GetReceivedCount(void)
+uint16_t Uart1_GetReceivedMessageCount(void)
 {
-    uint16_t count = 0U;
-
-    count = Uart1_RxCount;
-
-    return count;
+    return Uart1_QueueCount;
 }
 
-/**
- * @brief 启动 UART1 单字节接收中断。
- */
-static void Uart1_ReceiveInterruptStart(void)
+static Uart1_ResultType Uart1_StartDmaReceive(void)
 {
-    (void)HAL_UART_Receive_IT(&huart1, &Uart1_RxByte, 1U);
-}
+    Uart1_ResultType result = UART1_RESULT_OK;
+    HAL_StatusTypeDef hal_result = HAL_ERROR;
 
-/**
- * @brief HAL UART 接收完成回调。
- *
- * @param[in] UartHandle UART 外设句柄。
- */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
-{
-    uint16_t next_index = 0U;
+    hal_result = HAL_UARTEx_ReceiveToIdle_DMA(
+        &huart1,
+        Uart1_DmaRxBuffer,
+        UART1_DMA_RX_BUFFER_SIZE);
 
-    if ((UartHandle != (UART_HandleTypeDef *)0) && (UartHandle->Instance == USART1))
+    if (hal_result != HAL_OK)
     {
-        next_index = Uart1_RxWriteIndex + 1U;
-        if (next_index >= UART1_RX_BUFFER_SIZE)
-        {
-            next_index = 0U;
-        }
-
-        if (Uart1_RxCount < UART1_RX_BUFFER_SIZE)
-        {
-            Uart1_RxBuffer[Uart1_RxWriteIndex] = Uart1_RxByte;
-            Uart1_RxWriteIndex = next_index;
-            Uart1_RxCount++;
-        }
-        else
-        {
-            /* 缓冲区满时丢弃当前字节，保留已有数据。 */
-        }
-
-        Uart1_ReceiveInterruptStart();
+        result = UART1_RESULT_HAL_ERROR;
     }
     else
     {
-        /* 非 USART1 接收事件不在本模块处理。 */
+        __HAL_DMA_DISABLE_IT(huart1.hdmarx, DMA_IT_HT);
     }
+
+    return result;
+}
+
+static void Uart1_ResetDmaBuffer(void)
+{
+    uint16_t index = 0U;
+
+    (void)HAL_UART_AbortReceive(&huart1);
+    for (index = 0U; index < UART1_DMA_RX_BUFFER_SIZE; index++)
+    {
+        Uart1_DmaRxBuffer[index] = 0U;
+    }
+    (void)Uart1_StartDmaReceive();
+}
+
+static void Uart1_EnqueueMessage(const uint8_t *Data, uint16_t Length)
+{
+    uint16_t index = 0U;
+
+    if ((Data != (const uint8_t *)0) && (Length > 0U) &&
+        (Length <= UART1_DMA_RX_BUFFER_SIZE))
+    {
+        if (Uart1_QueueCount < UART1_RX_MESSAGE_QUEUE_SIZE)
+        {
+            Uart1_MessageQueue[Uart1_QueueWriteIndex].Length = Length;
+            for (index = 0U; index < Length; index++)
+            {
+                Uart1_MessageQueue[Uart1_QueueWriteIndex].Data[index] = Data[index];
+            }
+            Uart1_QueueWriteIndex++;
+            if (Uart1_QueueWriteIndex >= UART1_RX_MESSAGE_QUEUE_SIZE)
+            {
+                Uart1_QueueWriteIndex = 0U;
+            }
+            Uart1_QueueCount++;
+        }
+        else
+        {
+            /* 队列满时丢弃当前消息，保留已有消息。 */
+        }
+    }
+    else
+    {
+        /* 忽略空消息或超长消息。 */
+    }
+}
+
+void Uart1_HandleRxEvent(UART_HandleTypeDef *UartHandle, uint16_t Length)
+{
+    if ((Uart1_Initialized != 0U) &&
+        (UartHandle != (UART_HandleTypeDef *)0) &&
+        (UartHandle->Instance == USART1))
+    {
+        Uart1_EnqueueMessage(Uart1_DmaRxBuffer, Length);
+        Uart1_ResetDmaBuffer();
+    }
+    else
+    {
+        /* 非 USART1 事件不在本模块处理。 */
+    }
+}
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *UartHandle, uint16_t Size)
+{
+    Uart1_HandleRxEvent(UartHandle, Size);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+    Max_485_HandleUartRxComplete(UartHandle);
 }

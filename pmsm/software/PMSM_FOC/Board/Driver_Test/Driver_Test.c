@@ -3,7 +3,6 @@
 #include "Dio.h"
 #include "Pwm.h"
 #include "watchdog.h"
-#include "Uart1.h"
 
 /* ADC 测试的读取周期，单位 ms */
 #define DRIVER_TEST_ADC_PERIOD_MS (10U)
@@ -46,19 +45,6 @@ static void Driver_Test_Adc(void)
   (void)Adc_Start();
 }
 
-/**
- * @brief UART1 回环测试：原样转发上位机发送的每个字节。
- */
-static void Driver_Test_Uart1(void)
-{
-  uint8_t data = 0U;
-
-  while (Uart1_ReceiveByte(&data) == UART1_RESULT_OK)
-  {
-    (void)Uart1_Send(&data, 1U);
-  }
-}
-
 /*
  * @brief ADC周期测试任务：重新装载规则组并读取全部逻辑通道
  *
@@ -68,8 +54,6 @@ void Driver_Test_Loop(void)
 {
   uint32_t channel = 0U;
   Adc_ValueType value = 0U;
-
-  Driver_Test_Uart1();
 
   /* 规则组为单次转换，需每个周期重新装载触发 */
   (void)Adc_Start();

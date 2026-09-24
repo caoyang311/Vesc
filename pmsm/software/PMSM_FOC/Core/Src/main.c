@@ -30,8 +30,12 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "Driver_Test.h"
+#include "VescPacket.h"
 #include "Watchdog.h"
 #include "Uart1.h"
+#include "Board_Dac.h"
+#include "Board_Can.h"
+#include "Max_485.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -106,8 +110,11 @@ int main(void)
   MX_DAC_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-
+  Board_Dac_Init();
   Uart1_Init();
+  VescPacket_Init();
+  Board_Can_Init();
+  Max_485_Init();
   Driver_Test_Run();
 
   /* USER CODE END 2 */
@@ -119,6 +126,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    (void)VescPacket_Task();
     Driver_Test_Loop();
     Watchdog_Refresh();
   }

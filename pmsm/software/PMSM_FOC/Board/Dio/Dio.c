@@ -42,7 +42,17 @@ static const Dio_ChannelConfigType Dio_ChannelConfig[DIO_CONFIGURED_CHANNEL_COUN
     {
         DIO_CHANNEL_KEY2_PORT,
         DIO_CHANNEL_KEY2_PIN,
-    }
+    },
+    [DIO_CHANNEL_BEEP] =
+    {
+        DIO_CHANNEL_BEEP_PORT,
+        DIO_CHANNEL_BEEP_PIN,
+    },
+    [DIO_CHANNEL_MAX_485_EN] =
+    {
+        DIO_CHANNEL_MAX_485_EN_PORT,
+        DIO_CHANNEL_MAX_485_EN_PIN,
+    },
 };
 
 _Static_assert((sizeof(Dio_ChannelConfig) / sizeof(Dio_ChannelConfig[0])) ==

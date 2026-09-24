@@ -11,6 +11,8 @@ typedef enum
     DIO_CHANNEL_KEY0 = 3,
     DIO_CHANNEL_KEY1 = 4,
     DIO_CHANNEL_KEY2 = 5,
+    DIO_CHANNEL_BEEP = 6,
+    DIO_CHANNEL_MAX_485_EN = 7,
     DIO_CHANNEL_COUNT
 } Dio_ChannelType;
 

@@ -52,6 +52,10 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Driver_Test/Driver_Test.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Adc/Board_Adc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Uart/Uart1.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dac/Board_Dac.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Can/Board_Can.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Max_485/Max_485.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/VescPacket.c
 )
 
 # Add include paths
@@ -64,6 +68,10 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Driver_Test/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Adc/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Uart/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dac/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Can/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Max_485/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/
 )
 
 # Add project symbols (macros)

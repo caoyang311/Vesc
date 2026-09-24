@@ -10,10 +10,13 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include "usart.h"
 
 /**
  * @brief UART1 模块操作结果。
  */
+#define UART1_RX_MESSAGE_MAX_LENGTH (256U)
+
 typedef enum
 {
     UART1_RESULT_OK = 0U,
@@ -24,8 +27,14 @@ typedef enum
     UART1_RESULT_HAL_ERROR
 } Uart1_ResultType;
 
+typedef struct
+{
+    uint16_t Length;
+    uint8_t Data[UART1_RX_MESSAGE_MAX_LENGTH];
+} Uart1_MessageType;
+
 /**
- * @brief 初始化 UART1 驱动并使能单字节接收中断。
+ * @brief 初始化 UART1 驱动并启动 DMA + UART 空闲接收。
  */
 void Uart1_Init(void);
 
@@ -39,19 +48,24 @@ void Uart1_Init(void);
 Uart1_ResultType Uart1_Send(const uint8_t *Data, uint16_t Length);
 
 /**
- * @brief 从 UART1 接收环形缓冲区读取一个字节。
- *
- * @param[out] Data 用于保存接收字节的指针。
- * @return UART1_RESULT_OK 表示读取成功；UART1_RESULT_NO_DATA 表示当前无数据。
+ * @brief 从消息队列取出一帧 DMA 接收数据。
+ * @param[out] Message 消息输出缓冲区。
+ * @return UART1_RESULT_OK 表示读取成功；UART1_RESULT_NO_DATA 表示当前无消息。
  */
-Uart1_ResultType Uart1_ReceiveByte(uint8_t *Data);
+Uart1_ResultType Uart1_ReceiveMessage(Uart1_MessageType *Message);
 
 /**
- * @brief 获取 UART1 接收缓冲区中的字节数。
- *
- * @return 当前待读取的字节数。
+ * @brief 获取 UART1 接收消息队列中的消息数量。
+ * @return 当前待处理消息数量。
  */
-uint16_t Uart1_GetReceivedCount(void);
+uint16_t Uart1_GetReceivedMessageCount(void);
+
+/**
+ * @brief 处理 UART1 DMA 空闲接收事件。
+ * @param[in] UartHandle UART 外设句柄。
+ * @param[in] Length DMA 已接收数据长度。
+ */
+void Uart1_HandleRxEvent(UART_HandleTypeDef *UartHandle, uint16_t Length);
 
 #ifdef __cplusplus
 }
