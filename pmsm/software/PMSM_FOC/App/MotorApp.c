@@ -4,7 +4,7 @@
 #include "Led.h"
 #include "Motor.h"
 
-#define MOTOR_APP_LED_BLINK_PERIOD_MS (60U)
+#define MOTOR_APP_LED_BLINK_PERIOD_MS (500U)
 
 static uint8_t MotorApp_PreviousKeyStates = 0U;
 static uint8_t MotorApp_PreviousMotorRunning = 0U;
@@ -92,7 +92,7 @@ static void MotorApp_HandleLed(void)
     {
         if (MotorApp_PreviousMotorRunning == 0U)
         {
-            (void)Led_Blink(LED_ID_0, MOTOR_APP_LED_BLINK_PERIOD_MS);
+            (void)Led_Blink(LED_ID_1, MOTOR_APP_LED_BLINK_PERIOD_MS);
         }
         else
         {
@@ -101,7 +101,7 @@ static void MotorApp_HandleLed(void)
     }
     else
     {
-        (void)Led_Off(LED_ID_0);
+        (void)Led_Off(LED_ID_1);
     }
 
     MotorApp_PreviousMotorRunning = motor_is_running;

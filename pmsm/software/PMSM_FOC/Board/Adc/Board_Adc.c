@@ -2,7 +2,7 @@
 #include "Adc_Config.h"
 #include "Motor.h"
 #include "Motor_VF.h"
-
+#include "Dio.h"
 #include <stddef.h>
 
 /**
@@ -368,7 +368,7 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
     uint32_t channel = 0U;
     const Adc_ChannelConfigType *config = NULL;
-
+    Dio_WriteChannel(DIO_CHANNEL_TEST, STD_HIGH);
     for (channel = 0U; channel < (uint32_t)ADC_CONFIGURED_CHANNEL_COUNT; channel++)
     {
         config = &Adc_ChannelConfig[channel];
@@ -389,6 +389,7 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
     {
         Motor_VF_ControlFunction();
     }
+    Dio_WriteChannel(DIO_CHANNEL_TEST, STD_LOW);
 }
 
 /**

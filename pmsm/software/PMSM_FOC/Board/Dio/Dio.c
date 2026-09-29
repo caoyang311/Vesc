@@ -53,6 +53,11 @@ static const Dio_ChannelConfigType Dio_ChannelConfig[DIO_CONFIGURED_CHANNEL_COUN
         DIO_CHANNEL_MAX_485_EN_PORT,
         DIO_CHANNEL_MAX_485_EN_PIN,
     },
+    [DIO_CHANNEL_TEST] =
+    {
+        DIO_CHANNEL_TEST_PIN_PORT,
+        DIO_CHANNEL_TEST_PIN,
+    }
 };
 
 _Static_assert((sizeof(Dio_ChannelConfig) / sizeof(Dio_ChannelConfig[0])) ==

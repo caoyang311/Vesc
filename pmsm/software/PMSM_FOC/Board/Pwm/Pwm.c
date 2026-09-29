@@ -199,7 +199,7 @@ void Pwm_Set_UVW_CCR(uint16_t U_value, uint16_t V_value, uint16_t W_value)
  */
 void Pwm_StartAdcTrigger(void)
 {
-   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 8400-5U);
+   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 8400-2U);
    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
 }
 /*

@@ -97,6 +97,8 @@ void Error_Handler(void);
 #define LED0_GPIO_Port GPIOE
 #define LED1_Pin GPIO_PIN_1
 #define LED1_GPIO_Port GPIOE
+#define TESE_PIN_Pin GPIO_PIN_7
+#define TESE_PIN_GPIO_Port GPIOI
 
 /* USER CODE BEGIN Private defines */
 
