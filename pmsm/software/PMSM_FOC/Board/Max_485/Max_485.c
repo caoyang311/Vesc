@@ -137,7 +137,7 @@ void Max_485_HandleRxComplete(UART_HandleTypeDef *UartHandle)
     }
 }
 
-void Max_485_HandleUartRxComplete(UART_HandleTypeDef *UartHandle)
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
     Max_485_HandleRxComplete(UartHandle);
 }

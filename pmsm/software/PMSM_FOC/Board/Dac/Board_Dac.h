@@ -30,7 +30,7 @@ typedef enum
  * @return BOARD_DAC_RESULT_OK 启动成功；
  *         BOARD_DAC_RESULT_HAL_ERROR HAL 启动失败。
  */
-Board_Dac_ResultType Board_Dac_Init(void);
+void Board_Dac_Init(void);
 
 /**
  * @brief 设置 DAC1 输出值。

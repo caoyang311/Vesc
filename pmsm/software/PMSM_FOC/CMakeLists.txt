@@ -56,6 +56,10 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Can/Board_Can.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Max_485/Max_485.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/VescPacket.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/System/System.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/System/SystemTime.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/System/TaskManager.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/System/TaskConfig.c
 )
 
 # Add include paths
@@ -72,6 +76,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Can/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Max_485/
     ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/
+    ${CMAKE_CURRENT_SOURCE_DIR}/System/
 )
 
 # Add project symbols (macros)

@@ -52,13 +52,6 @@ uint16_t Max_485_GetReceivedCount(void);
  */
 void Max_485_HandleRxComplete(UART_HandleTypeDef *UartHandle);
 
-/**
- * @brief HAL UART 接收完成回调分发函数。
- *
- * @param[in] UartHandle UART 句柄。
- */
-void Max_485_HandleUartRxComplete(UART_HandleTypeDef *UartHandle);
-
 #ifdef __cplusplus
 }
 #endif

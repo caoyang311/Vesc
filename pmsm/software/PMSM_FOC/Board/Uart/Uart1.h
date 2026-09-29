@@ -43,7 +43,7 @@ void Uart1_Init(void);
  *
  * @param[in] Data 数据缓冲区。
  * @param[in] Length 数据长度，单位为字节。
- * @return UART1_RESULT_OK 表示发送成功。
+ * @return UART1_RESULT_OK 表示数据已写入发送队列；UART1_RESULT_BUSY 表示队列空间不足。
  */
 Uart1_ResultType Uart1_Send(const uint8_t *Data, uint16_t Length);
 

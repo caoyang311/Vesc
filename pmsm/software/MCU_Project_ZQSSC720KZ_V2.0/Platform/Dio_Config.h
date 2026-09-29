@@ -1,0 +1,45 @@
+#ifndef DIO_CONFIG_H
+#define DIO_CONFIG_H
+
+#include "Dio.h"
+#include "gpio.h"
+
+#define DIO_CONFIGURED_CHANNEL_COUNT DIO_CHANNEL_COUNT
+
+/*LED信号IO输出*/
+#define DIO_CHANNEL_LED_PORT   GPIOD
+#define DIO_CHANNEL_LED_PIN    GPIO_PIN_2
+    
+/*P档信号IO输入*/
+#define DIO_CHANNEL_DSP_P_PORT   GPIOB
+#define DIO_CHANNEL_DSP_P_PIN    GPIO_PIN_9
+
+/*边撑信号IO输入*/
+#define DIO_CHANNEL_DSP_SS_PORT   GPIOA
+#define DIO_CHANNEL_DSP_SS_PIN    GPIO_PIN_3
+    
+/*低速档信号IO输入*/
+#define DIO_CHANNEL_DSP_SDL_PORT   GPIOC
+#define DIO_CHANNEL_DSP_SDL_PIN    GPIO_PIN_11
+    
+/*高速档信号IO输入*/
+#define DIO_CHANNEL_DSP_SDH_PORT   GPIOA
+#define DIO_CHANNEL_DSP_SDH_PIN    GPIO_PIN_15
+    
+/*防盗信号IO输入*/
+#define DIO_CHANNEL_DSP_FDS_PORT   GPIOB
+#define DIO_CHANNEL_DSP_FDS_PIN    GPIO_PIN_5
+    
+/*定速巡航信号IO输入*/
+#define DIO_CHANNEL_DSP_XH_PORT   GPIOC
+#define DIO_CHANNEL_DSP_XH_PIN    GPIO_PIN_10
+    
+/*推车信号IO输入*/
+#define DIO_CHANNEL_DSP_PUSH_PORT   GPIOB
+#define DIO_CHANNEL_DSP_PUSH_PIN    GPIO_PIN_4
+
+/*一线通信号IO输出*/
+#define DIO_CHANNEL_DSP_SIF_PORT   GPIOA
+#define DIO_CHANNEL_DSP_SIF_PIN    GPIO_PIN_7
+
+#endif /* DIO_CONFIG_H */

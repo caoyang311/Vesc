@@ -7,8 +7,14 @@
 #include "usart.h"
 
 #define UART1_RX_MESSAGE_QUEUE_SIZE    (8U)
+#define UART1_TX_BUFFER_SIZE            (512U)
 
-
+static uint8_t Uart1_TxBuffer[UART1_TX_BUFFER_SIZE] = {0U};
+static volatile uint16_t Uart1_TxWriteIndex = 0U;
+static volatile uint16_t Uart1_TxReadIndex = 0U;
+static volatile uint16_t Uart1_TxCount = 0U;
+static volatile uint8_t Uart1_TxActive = 0U;
+static uint8_t Uart1_TxByte = 0U;
 
 static uint8_t Uart1_DmaRxBuffer[UART1_RX_MESSAGE_MAX_LENGTH] = {0U}; /** @brief DMA 接收缓冲区 */
 static Uart1_MessageType Uart1_MessageQueue[UART1_RX_MESSAGE_QUEUE_SIZE] = {0}; /** @brief 消息队列 */
@@ -20,6 +26,8 @@ static volatile uint8_t Uart1_Initialized = 0U; /** @brief 初始化标志位 */
 static Uart1_ResultType Uart1_StartDmaReceive(void);
 static void Uart1_ResetDmaBuffer(void);
 static void Uart1_EnqueueMessage(const uint8_t *Data, uint16_t Length);
+static void Uart1_StartTxInterrupt(void);
+static void Uart1_HandleTxComplete(UART_HandleTypeDef *UartHandle);
 /**
  * @brief 初始化 UART1 驱动并启动 DMA + UART 空闲接收。
  */
@@ -40,6 +48,10 @@ void Uart1_Init(void)
     Uart1_QueueWriteIndex = 0U;
     Uart1_QueueReadIndex = 0U;
     Uart1_QueueCount = 0U;
+    Uart1_TxWriteIndex = 0U;
+    Uart1_TxReadIndex = 0U;
+    Uart1_TxCount = 0U;
+    Uart1_TxActive = 0U;
     Uart1_Initialized = 1U;
     (void)Uart1_StartDmaReceive();
 }
@@ -52,8 +64,10 @@ void Uart1_Init(void)
  */
 Uart1_ResultType Uart1_Send(const uint8_t *Data, uint16_t Length)
 {
-    HAL_StatusTypeDef hal_result = HAL_ERROR;
     Uart1_ResultType result = UART1_RESULT_OK;
+    uint16_t first_copy_length = 0U;
+    uint16_t second_copy_length = 0U;
+    uint16_t write_index = 0U;
 
     if (Uart1_Initialized == 0U)
     {
@@ -65,19 +79,106 @@ Uart1_ResultType Uart1_Send(const uint8_t *Data, uint16_t Length)
     }
     else
     {
-        hal_result = HAL_UART_Transmit(&huart1, (uint8_t *)Data, Length, HAL_MAX_DELAY);
-        if (hal_result != HAL_OK)
+        if (Length > (uint16_t)(UART1_TX_BUFFER_SIZE - Uart1_TxCount))
         {
-            result = UART1_RESULT_HAL_ERROR;
+            result = UART1_RESULT_BUSY;
         }
         else
         {
-            result = UART1_RESULT_OK;
+            write_index = Uart1_TxWriteIndex;
+            first_copy_length = (uint16_t)(UART1_TX_BUFFER_SIZE - write_index);
+            if (first_copy_length > Length)
+            {
+                first_copy_length = Length;
+            }
+            else
+            {
+                /* 首段复制到缓冲区尾部。 */
+            }
+            (void)memcpy(&Uart1_TxBuffer[write_index], Data, first_copy_length);
+
+            second_copy_length = (uint16_t)(Length - first_copy_length);
+            if (second_copy_length > 0U)
+            {
+                (void)memcpy(
+                    Uart1_TxBuffer,
+                    &Data[first_copy_length],
+                    second_copy_length);
+            }
+            else
+            {
+                /* 数据未跨越环形缓冲区边界。 */
+            }
+            write_index = (uint16_t)(write_index + Length);
+            if (write_index >= UART1_TX_BUFFER_SIZE)
+            {
+                write_index = (uint16_t)(write_index - UART1_TX_BUFFER_SIZE);
+            }
+            else
+            {
+                /* 环形缓冲区索引未回绕。 */
+            }
+            Uart1_TxWriteIndex = write_index;
+            Uart1_TxCount = (uint16_t)(Uart1_TxCount + Length);
+            if (Uart1_TxActive == 0U)
+            {
+                Uart1_StartTxInterrupt();
+            }
+            else
+            {
+                /* UART1 已经在发送队列中的数据。 */
+            }
         }
     }
 
     return result;
 }
+static void Uart1_StartTxInterrupt(void)
+{
+    if ((Uart1_TxActive == 0U) && (Uart1_TxCount > 0U))
+    {
+        Uart1_TxByte = Uart1_TxBuffer[Uart1_TxReadIndex];
+        Uart1_TxReadIndex++;
+        if (Uart1_TxReadIndex >= UART1_TX_BUFFER_SIZE)
+        {
+            Uart1_TxReadIndex = 0U;
+        }
+        else
+        {
+            /* 环形缓冲区索引未回绕。 */
+        }
+        Uart1_TxCount--;
+        Uart1_TxActive = 1U;
+        if (HAL_UART_Transmit_IT(&huart1, &Uart1_TxByte, 1U) != HAL_OK)
+        {
+            Uart1_TxActive = 0U;
+        }
+    }
+    else
+    {
+        /* UART1 当前没有待发送数据或正在发送。 */
+    }
+}
+
+static void Uart1_HandleTxComplete(UART_HandleTypeDef *UartHandle)
+{
+    if ((UartHandle != (UART_HandleTypeDef *)0) &&
+        (UartHandle->Instance == USART1))
+    {
+        Uart1_TxActive = 0U;
+        Uart1_StartTxInterrupt();
+    }
+    else
+    {
+        /* 非 USART1 发送完成事件不在本模块处理。 */
+    }
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+    Uart1_HandleTxComplete(UartHandle);
+}
+
 /**
  * @brief 从消息队列取出一帧 DMA 接收数据。
  * @param[out] Message 消息输出缓冲区。
