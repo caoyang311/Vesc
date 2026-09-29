@@ -5,7 +5,7 @@
 #include "Pwm.h"
 
 #define MOTOR_VF_POLE_PAIRS                         (5U)     /**< 电机极对数 */
-#define MOTOR_VF_BACK_EMF_V_PER_KRPM               (8.0F)   /**< 电机反电动势V/kRPM */
+#define MOTOR_VF_BACK_EMF_V_PER_KRPM               (7.0F)   /**< 电机反电动势V/kRPM */
 #define MOTOR_VF_RATED_SPEED_RPM                   (3000.0F) /**< 电机额定转速RPM */
 #define MOTOR_VF_CONTROL_FREQUENCY_HZ              (10000.0F) /**< PWM控制频率Hz */
 #define MOTOR_VF_TARGET_FREQUENCY_HZ               (30.0F)    /**< 强拖目标频率Hz */
