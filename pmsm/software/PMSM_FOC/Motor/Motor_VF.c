@@ -4,7 +4,7 @@
 #include "FocTrigTable.h"
 #include "Pwm.h"
 
-#define MOTOR_VF_POLE_PAIRS                         (4U)     /**< 电机极对数 */
+#define MOTOR_VF_POLE_PAIRS                         (5U)     /**< 电机极对数 */
 #define MOTOR_VF_BACK_EMF_V_PER_KRPM               (4.3F)   /**< 电机反电动势V/kRPM */
 #define MOTOR_VF_RATED_SPEED_RPM                   (3000.0F) /**< 电机额定转速RPM */
 #define MOTOR_VF_CONTROL_FREQUENCY_HZ              (10000.0F) /**< PWM控制频率Hz */
@@ -18,7 +18,7 @@
      (MOTOR_VF_FREQUENCY_RAMP_TIME_S * MOTOR_VF_CONTROL_FREQUENCY_HZ))
 #define MOTOR_VF_BOOST_VOLTAGE_V                   (0.05F)    /**< 电机启动电压V */
 #define MOTOR_VF_ALIGN_VOLTAGE_V                   (1.0F)     /**< 电机对齐电压V */
-#define MOTOR_VF_BUS_VOLTAGE_V                     (24.0F)    /**< 母线电压V */
+#define MOTOR_VF_BUS_VOLTAGE_V                     (48.0F)    /**< 母线电压V */
 #define MOTOR_VF_INV_SQRT_THREE                    (0.5773502692F) /**< 1/sqrt(3) */
 #define MOTOR_VF_D_AXIS_RATIO                      (0.0F)     /**< D轴比 */
 #define MOTOR_VF_Q_AXIS_RATIO                      (1.0F)     /**< Q轴比 */
