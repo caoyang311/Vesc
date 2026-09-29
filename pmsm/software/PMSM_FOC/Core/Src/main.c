@@ -29,13 +29,17 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "Driver_Test.h"
 #include "VescPacket.h"
 #include "Uart1.h"
 #include "Board_Dac.h"
 #include "Board_Can.h"
 #include "Max_485.h"
 #include "System.h"
+#include "Motor.h"
+#include "Key.h"
+#include "Led.h"
+#include "MotorApp.h"
+#include "Board_Adc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -110,14 +114,15 @@ int main(void)
   MX_DAC_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
+  /* 硬件板级初始化 */
   Board_Dac_Init();
-  Uart1_Init();
-  VescPacket_Init();
-  Board_Can_Init();
-  Max_485_Init();
-  Driver_Test_Run();
+  Adc_Init();
+  /* 用户层初始化 */
+  Key_Init();
+  Led_Init();
+  MotorApp_Init();
   System_Init();
-
+  Motor_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */

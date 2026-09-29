@@ -49,7 +49,6 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Core/reset.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Watchdog/watchdog.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dio/Dio.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Driver_Test/Driver_Test.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Adc/Board_Adc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Uart/Uart1.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dac/Board_Dac.c
@@ -60,6 +59,17 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/System/SystemTime.c
     ${CMAKE_CURRENT_SOURCE_DIR}/System/TaskManager.c
     ${CMAKE_CURRENT_SOURCE_DIR}/System/TaskConfig.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Motor/Motor.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Motor/Motor_VF.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Motor/Motor_IF.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Motor/Motor_Speed.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Motor/Motor_Position.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Motor/Motor_Identification.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc/FocAlgorithm.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc/FocTrigTable.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/APP/Key.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/APP/Led.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/APP/MotorApp.c
 )
 
 # Add include paths
@@ -69,7 +79,6 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Core/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Watchdog/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dio/
-    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Driver_Test/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Adc/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Uart/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dac/
@@ -77,6 +86,9 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Max_485/
     ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/
     ${CMAKE_CURRENT_SOURCE_DIR}/System/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Motor/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc/
+    ${CMAKE_CURRENT_SOURCE_DIR}/APP/
 )
 
 # Add project symbols (macros)
@@ -90,6 +102,7 @@ list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_LIBRARIES ob)
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
+    m
 
     # Add user defined libraries
 )

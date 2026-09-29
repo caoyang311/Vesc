@@ -1,5 +1,7 @@
 #include "Board_Adc.h"
 #include "Adc_Config.h"
+#include "Motor.h"
+#include "Motor_VF.h"
 
 #include <stddef.h>
 
@@ -380,6 +382,12 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
                     hadc, Adc_InjectedRankMap[config->Rank - 1U]);
             Adc_ChannelValid[channel] = 1U;
         }
+    }
+
+    if ((hadc == &hadc2) &&
+        (Motor_GetMode() == MOTOR_MODE_VF))
+    {
+        Motor_VF_ControlFunction();
     }
 }
 

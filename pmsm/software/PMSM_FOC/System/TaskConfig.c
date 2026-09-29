@@ -3,10 +3,12 @@
  * @brief PMSM_FOC 周期任务配置。
  */
 #include "TaskConfig.h"
-
-#include "Driver_Test.h"
 #include "VescPacket.h"
 #include "Watchdog.h"
+#include "Motor.h"
+#include "Key.h"
+#include "Led.h"
+#include "MotorApp.h"
 
 static void TaskRun_1ms(void);
 static void TaskRun_5ms(void);
@@ -43,7 +45,6 @@ const TaskManager_TaskConfigType *TaskConfig_GetTasks(uint16_t *Count)
  */
 static void TaskRun_1ms(void)
 {
-    (void)VescPacket_Task();
     Watchdog_Refresh();
 }
 /**
@@ -51,13 +52,16 @@ static void TaskRun_1ms(void)
  */
 static void TaskRun_5ms(void)
 {
+    Key_Scan();
+    MotorApp_MainFunction();
 }
 /**
  * @brief 10ms 周期任务。
  */
 static void TaskRun_10ms(void)
 {
-    Driver_Test_Loop();
+    Motor_MainFunction();
+    Led_MainFunction();
 }
 /**
  * @brief 20ms 周期任务。
