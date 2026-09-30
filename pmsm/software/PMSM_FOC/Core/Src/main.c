@@ -36,6 +36,8 @@
 #include "MotorApp.h"
 #include "Board_Adc.h"
 #include "Com.h"
+#include "Board_485.h"
+#include "Sensor_Tamagawa.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -113,6 +115,8 @@ int main(void)
   Board_Dac_Init();
   Adc_Init();
   Com_Uart_Init(&huart1);
+  Rs485_Init();
+  Sensor_Tamagawa_Init();
   /* 用户层初始化 */
   Key_Init();
   Led_Init();

@@ -4,6 +4,7 @@
 #include "FocTrigTable.h"
 #include "Pwm.h"
 #include "Com.h"
+#include "Sensor_Tamagawa.h"
 
 #define MOTOR_VF_POLE_PAIRS                         (5U)     /**< 电机极对数 */
 #define MOTOR_VF_BACK_EMF_V_PER_KRPM               (7.0F)   /**< 电机反电动势V/kRPM */
@@ -151,14 +152,13 @@ static void Motor_VF_RunForceDrag(void)
     {
         Motor_VfState.ElectricalFrequencyHz = MOTOR_VF_TARGET_FREQUENCY_HZ;
     }
-
+    debug[0] = Sensor_Tamagawa_GetElectricalPhase(MOTOR_VF_POLE_PAIRS);/** 获取电机角度 */
     FocAlgorithm_GenerateAngle(Motor_VfState.ElectricalFrequencyHz,&Motor_VfState.ElectricalAngle);/** 更新电机角度 */
     voltage_magnitude_v = Motor_VF_CalculateVoltage(Motor_VfState.ElectricalFrequencyHz);/** 根据电机频率Hz，计算V/F输出电压 */
     Motor_VF_OutputVoltage(MOTOR_VF_D_AXIS_RATIO * voltage_magnitude_v,
                            MOTOR_VF_Q_AXIS_RATIO * voltage_magnitude_v);/** 输出V/F电压 */
     /** 发送调试数据 */
-    debug[0] = (float)Motor_VfState.ElectricalAngle;
-    debug[1] = (float)Motor_VfState.ElectricalFrequencyHz;
+    debug[1] = (float)Motor_VfState.ElectricalAngle;
     Com_Uart_SendJustFloat(debug, 2);                        
 }
 /**

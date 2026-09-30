@@ -7,6 +7,8 @@
 #include "Pwm.h"
 #include "Dio.h"
 #include "Board_Adc.h"
+#include "Sensor_Tamagawa.h"
+
 static Motor_ModeType Motor_CurrentMode = MOTOR_MODE_VF;
 static bool Motor_IsRunning = false;
 
@@ -15,8 +17,6 @@ static bool Motor_IsRunning = false;
  */
 void Motor_Init(void)
 {
-    
-    
     Motor_VF_Init();
     Motor_IF_Init();
     Motor_Speed_Init();
@@ -26,6 +26,7 @@ void Motor_Init(void)
     Motor_IsRunning = false; 
     Adc_Start();/*启动ADC转换*/
     Pwm_StartAdcTrigger();/*开启定时器触发ADC转换*/
+    Sensor_Tamagawa_RequestAngle();/*读取电机初始角度*/
 }
 /**
  * @brief 设置电机模式。

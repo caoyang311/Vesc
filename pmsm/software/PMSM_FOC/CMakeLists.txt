@@ -50,7 +50,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dio/Dio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Adc/Board_Adc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Uart/Board_Uart1.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Uart/Board_485.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dac/Board_Dac.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Sensor/Sensor_Tamagawa.c
     ${CMAKE_CURRENT_SOURCE_DIR}/System/System.c
     ${CMAKE_CURRENT_SOURCE_DIR}/System/SystemTime.c
     ${CMAKE_CURRENT_SOURCE_DIR}/System/TaskManager.c
@@ -87,6 +89,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Foc/
     ${CMAKE_CURRENT_SOURCE_DIR}/APP/
     ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Sensor/
 )
 
 # Add project symbols (macros)

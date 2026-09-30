@@ -9,7 +9,6 @@
 #include "Led.h"
 #include "MotorApp.h"
 #include "Com.h"
-
 static void TaskRun_1ms(void);
 static void TaskRun_5ms(void);
 static void TaskRun_10ms(void);

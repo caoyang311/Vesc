@@ -1,4 +1,5 @@
 #include "Com.h"
+#include "Board_485.h"
 
 static UartTransport_t s_transport;
 static ProtoParser_t   s_parser;
@@ -109,6 +110,11 @@ void HAL_UARTEx_RxEventCallback(
         (huart->Instance == s_transport.huart->Instance))
     {
         UartTransport_RxEventHandler(&s_transport, size);
+    }
+    else if ((huart != (UART_HandleTypeDef *)0) &&
+             (huart->Instance == USART3))
+    {
+        Rs485_RxEventHandler(size);
     }
 }
 
