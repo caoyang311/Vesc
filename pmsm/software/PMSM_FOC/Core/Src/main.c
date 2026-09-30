@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
-#include "can.h"
 #include "dac.h"
 #include "dma.h"
 #include "iwdg.h"
@@ -29,17 +28,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "VescPacket.h"
-#include "Uart1.h"
 #include "Board_Dac.h"
-#include "Board_Can.h"
-#include "Max_485.h"
 #include "System.h"
 #include "Motor.h"
 #include "Key.h"
 #include "Led.h"
 #include "MotorApp.h"
 #include "Board_Adc.h"
+#include "Com.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -109,7 +105,6 @@ int main(void)
   MX_ADC1_Init();
   MX_ADC2_Init();
   MX_USART1_UART_Init();
-  MX_CAN1_Init();
   MX_USART3_UART_Init();
   MX_DAC_Init();
   MX_TIM6_Init();
@@ -117,6 +112,7 @@ int main(void)
   /* 硬件板级初始化 */
   Board_Dac_Init();
   Adc_Init();
+  Com_Uart_Init(&huart1);
   /* 用户层初始化 */
   Key_Init();
   Led_Init();

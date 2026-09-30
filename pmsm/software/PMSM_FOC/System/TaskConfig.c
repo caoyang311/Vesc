@@ -3,12 +3,12 @@
  * @brief PMSM_FOC 周期任务配置。
  */
 #include "TaskConfig.h"
-#include "VescPacket.h"
 #include "Watchdog.h"
 #include "Motor.h"
 #include "Key.h"
 #include "Led.h"
 #include "MotorApp.h"
+#include "Com.h"
 
 static void TaskRun_1ms(void);
 static void TaskRun_5ms(void);
@@ -45,6 +45,8 @@ const TaskManager_TaskConfigType *TaskConfig_GetTasks(uint16_t *Count)
  */
 static void TaskRun_1ms(void)
 {
+    Com_RX_MainFunction();
+    Com_TX_MainFunction();
     Watchdog_Refresh();
 }
 /**

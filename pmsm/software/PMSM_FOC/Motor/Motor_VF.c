@@ -3,6 +3,7 @@
 #include "FocAlgorithm.h"
 #include "FocTrigTable.h"
 #include "Pwm.h"
+#include "Com.h"
 
 #define MOTOR_VF_POLE_PAIRS                         (5U)     /**< 电机极对数 */
 #define MOTOR_VF_BACK_EMF_V_PER_KRPM               (7.0F)   /**< 电机反电动势V/kRPM */
@@ -131,7 +132,7 @@ static void Motor_VF_RunPreposition(void)
 static void Motor_VF_RunForceDrag(void)
 {
     float voltage_magnitude_v = 0.0F;
-
+    float debug[2] = {0.0F, 0.0F};
     if (Motor_VfState.ElectricalFrequencyHz < MOTOR_VF_TARGET_FREQUENCY_HZ)
     {
         Motor_VfState.ElectricalFrequencyHz += MOTOR_VF_FREQUENCY_STEP_HZ;
@@ -155,6 +156,10 @@ static void Motor_VF_RunForceDrag(void)
     voltage_magnitude_v = Motor_VF_CalculateVoltage(Motor_VfState.ElectricalFrequencyHz);/** 根据电机频率Hz，计算V/F输出电压 */
     Motor_VF_OutputVoltage(MOTOR_VF_D_AXIS_RATIO * voltage_magnitude_v,
                            MOTOR_VF_Q_AXIS_RATIO * voltage_magnitude_v);/** 输出V/F电压 */
+    /** 发送调试数据 */
+    debug[0] = (float)Motor_VfState.ElectricalAngle;
+    debug[1] = (float)Motor_VfState.ElectricalFrequencyHz;
+    Com_Uart_SendJustFloat(debug, 2);                        
 }
 /**
  * @brief 初始化V/F控制。

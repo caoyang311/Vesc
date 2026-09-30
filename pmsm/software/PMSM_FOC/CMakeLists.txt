@@ -46,15 +46,11 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Pwm/Pwm.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Core/reset.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Watchdog/watchdog.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dio/Dio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Adc/Board_Adc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Uart/Uart1.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Uart/Board_Uart1.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dac/Board_Dac.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Can/Board_Can.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Max_485/Max_485.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/VescPacket.c
     ${CMAKE_CURRENT_SOURCE_DIR}/System/System.c
     ${CMAKE_CURRENT_SOURCE_DIR}/System/SystemTime.c
     ${CMAKE_CURRENT_SOURCE_DIR}/System/TaskManager.c
@@ -70,6 +66,10 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/APP/Key.c
     ${CMAKE_CURRENT_SOURCE_DIR}/APP/Led.c
     ${CMAKE_CURRENT_SOURCE_DIR}/APP/MotorApp.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/APP/Com.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/Fifo.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/Justfloat.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/Protocol.c
 )
 
 # Add include paths
@@ -82,13 +82,11 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Adc/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Uart/
     ${CMAKE_CURRENT_SOURCE_DIR}/Board/Dac/
-    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Can/
-    ${CMAKE_CURRENT_SOURCE_DIR}/Board/Max_485/
-    ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/
     ${CMAKE_CURRENT_SOURCE_DIR}/System/
     ${CMAKE_CURRENT_SOURCE_DIR}/Motor/
     ${CMAKE_CURRENT_SOURCE_DIR}/Foc/
     ${CMAKE_CURRENT_SOURCE_DIR}/APP/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/
 )
 
 # Add project symbols (macros)

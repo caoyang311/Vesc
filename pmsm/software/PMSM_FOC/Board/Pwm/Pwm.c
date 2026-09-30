@@ -164,7 +164,6 @@ void Pwm_Start(void)
   Pwm_Start_U_PWM();
   Pwm_Start_V_PWM();
   Pwm_Start_W_PWM();
-  HAL_TIM_Base_Start_IT(&htim1);
 }
 /**
  * @brief 关闭PWM互补输出
@@ -173,7 +172,6 @@ void Pwm_Start(void)
  */
 void Pwm_Stop(void)
 {
-  HAL_TIM_Base_Stop_IT(&htim1);
   Pwm_Stop_U_PWM();
   Pwm_Stop_V_PWM();
   Pwm_Stop_W_PWM();
