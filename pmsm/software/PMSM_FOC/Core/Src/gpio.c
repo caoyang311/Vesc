@@ -78,12 +78,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF9_CAN1;
   HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : MAX_485_EN_Pin */
-  GPIO_InitStruct.Pin = MAX_485_EN_Pin;
+  /*Configure GPIO pins : MAX_485_EN_Pin TESE_PIN_Pin */
+  GPIO_InitStruct.Pin = MAX_485_EN_Pin|TESE_PIN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(MAX_485_EN_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BEEP_Pin PM1_CTRL_SD_Pin */
   GPIO_InitStruct.Pin = BEEP_Pin|PM1_CTRL_SD_Pin;
@@ -106,13 +106,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : TESE_PIN_Pin */
-  GPIO_InitStruct.Pin = TESE_PIN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(TESE_PIN_GPIO_Port, &GPIO_InitStruct);
 
 }
 

@@ -11,7 +11,7 @@
 
 #define RS485_UART_HANDLE      huart3
 #define RS485_DE_PORT          GPIOI
-#define RS485_DE_PIN           GPIO_PIN_10
+#define RS485_DE_PIN           GPIO_PIN_11
 #define RS485_RX_BUF_SIZE      (256U)
 #define RS485_TX_BUFFER_SIZE   (256U)
 
