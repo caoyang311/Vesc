@@ -25,6 +25,7 @@ void Motor_Start(void);
 void Motor_Stop(void);
 void Motor_MainFunction(void);
 bool Motor_GetIsRunning(void);
+float Motor_GetDcBusVoltage(void);
 
 #ifdef __cplusplus
 }

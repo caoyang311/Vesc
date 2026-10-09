@@ -5,6 +5,8 @@
 #include "Pwm.h"
 #include "Com.h"
 #include "Sensor_Tamagawa.h"
+#include "Motor.h"
+#include "FocCurrent.h"
 
 #define MOTOR_VF_POLE_PAIRS                         (5U)     /**< 电机极对数 */
 #define MOTOR_VF_BACK_EMF_V_PER_KRPM               (7.0F)   /**< 电机反电动势V/kRPM */
@@ -20,7 +22,6 @@
      (MOTOR_VF_FREQUENCY_RAMP_TIME_S * MOTOR_VF_CONTROL_FREQUENCY_HZ))
 #define MOTOR_VF_BOOST_VOLTAGE_V                   (0.135F)    /**< 电机启动电压V */
 #define MOTOR_VF_ALIGN_VOLTAGE_V                   (1.0F)     /**< 电机对齐电压V */
-#define MOTOR_VF_BUS_VOLTAGE_V                     (48.0F)    /**< 母线电压V */
 #define MOTOR_VF_INV_SQRT_THREE                    (0.5773502692F) /**< 1/sqrt(3) */
 #define MOTOR_VF_D_AXIS_RATIO                      (0.0F)     /**< D轴比 */
 #define MOTOR_VF_Q_AXIS_RATIO                      (1.0F)     /**< Q轴比 */
@@ -47,11 +48,11 @@ typedef struct
     uint16_t ElectricalAngle;
     float ElectricalFrequencyHz;
     uint32_t PrepositionTick;
+    Foc_PhCurrentType Current;
     Motor_VfStateIdType State;
 } Motor_VF_Type;
 
 static Motor_VF_Type Motor_VfState;
-static const float Motor_VF_BusVoltageV = MOTOR_VF_BUS_VOLTAGE_V;
 /**
  * @brief 重置电机状态。
  */
@@ -81,7 +82,7 @@ static float Motor_VF_CalculateVoltage(float frequency_hz)
 {
     float voltage_v = MOTOR_VF_BOOST_VOLTAGE_V +
                       (MOTOR_VF_VF_SLOPE_V_PER_HZ * frequency_hz);
-    float voltage_limit_v = MOTOR_VF_BUS_VOLTAGE_V *
+    float voltage_limit_v = Motor_GetDcBusVoltage() *
                             MOTOR_VF_INV_SQRT_THREE;
 
     if (voltage_v > voltage_limit_v)
@@ -111,9 +112,14 @@ static void Motor_VF_OutputVoltage(float voltage_d, float voltage_q)
     FocAlgorithm_InversePark(&Motor_VfState.VoltageDq,
                              &Motor_VfState.Trig,
                              &Motor_VfState.VoltageAlphaBeta);
-    FocAlgorithm_Svpwm(&Motor_VfState.VoltageAlphaBeta,
-                       &Motor_VF_BusVoltageV,
-                       &Motor_VfState.PwmCompare);
+    float dc_bus_voltage_v = Motor_GetDcBusVoltage();
+
+    if (dc_bus_voltage_v > 0.0F)
+    {
+        FocAlgorithm_Svpwm(&Motor_VfState.VoltageAlphaBeta,
+                           &dc_bus_voltage_v,
+                           &Motor_VfState.PwmCompare);
+    }
 
     Pwm_Set_UVW_CCR(Motor_VfState.PwmCompare.compare_u,
                     Motor_VfState.PwmCompare.compare_v,
@@ -153,6 +159,7 @@ static void Motor_VF_RunForceDrag(void)
         Motor_VfState.ElectricalFrequencyHz = MOTOR_VF_TARGET_FREQUENCY_HZ;
     }
     debug[0] = Sensor_Tamagawa_GetElectricalPhase(MOTOR_VF_POLE_PAIRS);/** 获取电机角度 */
+    FocCurrent_Update(&Motor_VfState.Current);/** 更新相电流采样 */
     FocAlgorithm_GenerateAngle(Motor_VfState.ElectricalFrequencyHz,&Motor_VfState.ElectricalAngle);/** 更新电机角度 */
     voltage_magnitude_v = Motor_VF_CalculateVoltage(Motor_VfState.ElectricalFrequencyHz);/** 根据电机频率Hz，计算V/F输出电压 */
     Motor_VF_OutputVoltage(MOTOR_VF_D_AXIS_RATIO * voltage_magnitude_v,
@@ -167,6 +174,7 @@ static void Motor_VF_RunForceDrag(void)
 void Motor_VF_Init(void)
 {
     Motor_VF_ResetState();
+    FocCurrent_Init();
 }
 /**
  * @brief V/F控制函数。
@@ -211,6 +219,7 @@ void Motor_VF_MainFunction(void)
     if (Motor_GetIsRunning() == false)
     {
        Motor_VF_ResetState();
+       FocCurrent_CalibrateBiasVoltage();
     }
     else
     {

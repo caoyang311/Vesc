@@ -65,6 +65,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Motor/Motor_Identification.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Foc/FocAlgorithm.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Foc/FocTrigTable.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc/FocCurrent.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc/FocFilter.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc/FocPID.c
     ${CMAKE_CURRENT_SOURCE_DIR}/APP/Key.c
     ${CMAKE_CURRENT_SOURCE_DIR}/APP/Led.c
     ${CMAKE_CURRENT_SOURCE_DIR}/APP/MotorApp.c

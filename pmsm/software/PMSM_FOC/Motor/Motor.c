@@ -8,9 +8,19 @@
 #include "Dio.h"
 #include "Board_Adc.h"
 #include "Sensor_Tamagawa.h"
+#include "FocFilter.h"
+
+#define MOTOR_ADC_REFERENCE_VOLTAGE_V     (3.3F)      /**< ADC参考电压 */
+#define MOTOR_ADC_RESOLUTION_COUNT        (4095.0F)   /**< ADC分辨率计数 */
+#define MOTOR_DC_BUS_R_TOP_OHM            (24000.0F)    /**< DC上分压电阻 */
+#define MOTOR_DC_BUS_R_BOTTOM_OHM         (1000.0F)     /**< DC底部分压电阻 */
+
+
 
 static Motor_ModeType Motor_CurrentMode = MOTOR_MODE_VF;
 static bool Motor_IsRunning = false;
+static float Motor_DcBusVoltageV = 0.0F;
+static LPF_Filter Motor_DcBusVoltageFilter = {0.0f, 0.0f};
 
 /**
  * @brief 初始化电机。
@@ -22,8 +32,10 @@ void Motor_Init(void)
     Motor_Speed_Init();
     Motor_Position_Init();
     Motor_Identification_Init();
+    FocLpf_Init(&Motor_DcBusVoltageFilter, 0.2f);
     Motor_CurrentMode = MOTOR_MODE_VF;
-    Motor_IsRunning = false; 
+    Motor_IsRunning = false;
+    Motor_DcBusVoltageV = 0.0F;
     Adc_Start();/*启动ADC转换*/
     Pwm_StartAdcTrigger();/*开启定时器触发ADC转换*/
     Sensor_Tamagawa_RequestAngle();/*读取电机初始角度*/
@@ -59,6 +71,25 @@ Motor_ModeType Motor_GetMode(void)
 bool Motor_GetIsRunning(void)
 {
     return Motor_IsRunning;
+}
+/**
+ * @brief 获取DC总电压。
+ *
+ * @return float DC总电压。
+ */
+float Motor_GetDcBusVoltage(void)
+{
+    Adc_ValueType adc_value = 0U;
+
+    if (Adc_ReadChannel(ADC_CH_ID_DC_BUS_VOLTAGE, &adc_value) == ADC_RESULT_OK)
+    {
+        Motor_DcBusVoltageV =
+            ((float)adc_value * MOTOR_ADC_REFERENCE_VOLTAGE_V /
+             MOTOR_ADC_RESOLUTION_COUNT) *
+            ((MOTOR_DC_BUS_R_TOP_OHM + MOTOR_DC_BUS_R_BOTTOM_OHM) /
+             MOTOR_DC_BUS_R_BOTTOM_OHM);
+    }
+    return FocLpf_Update(&Motor_DcBusVoltageFilter, Motor_DcBusVoltageV);
 }
 /**
  * @brief 启动电机。
