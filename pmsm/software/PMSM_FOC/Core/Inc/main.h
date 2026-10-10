@@ -75,8 +75,6 @@ void Error_Handler(void);
 #define PM1_VTEMP_GPIO_Port GPIOA
 #define PM1_AMPW_Pin GPIO_PIN_3
 #define PM1_AMPW_GPIO_Port GPIOA
-#define PM1_AMPV_Pin GPIO_PIN_6
-#define PM1_AMPV_GPIO_Port GPIOA
 #define PM1_AMPU_Pin GPIO_PIN_0
 #define PM1_AMPU_GPIO_Port GPIOB
 #define PM1_VBUS_Pin GPIO_PIN_1

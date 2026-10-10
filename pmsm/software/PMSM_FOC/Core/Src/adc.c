@@ -50,8 +50,8 @@ void MX_ADC1_Init(void)
   hadc1.Init.ScanConvMode = ENABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
+  hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T2_TRGO;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 2;
   hadc1.Init.DMAContinuousRequests = ENABLE;
@@ -183,12 +183,13 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     /**ADC1 GPIO Configuration
     PA0-WKUP     ------> ADC1_IN0
+    PA6     ------> ADC1_IN6
     PB1     ------> ADC1_IN9
     */
-    GPIO_InitStruct.Pin = PM1_VTEMP_Pin;
+    GPIO_InitStruct.Pin = PM1_VTEMP_Pin|GPIO_PIN_6;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(PM1_VTEMP_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = PM1_VBUS_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
@@ -236,7 +237,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     PA6     ------> ADC2_IN6
     PB0     ------> ADC2_IN8
     */
-    GPIO_InitStruct.Pin = PM1_AMPW_Pin|PM1_AMPV_Pin;
+    GPIO_InitStruct.Pin = PM1_AMPW_Pin|GPIO_PIN_6;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -268,9 +269,10 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
 
     /**ADC1 GPIO Configuration
     PA0-WKUP     ------> ADC1_IN0
+    PA6     ------> ADC1_IN6
     PB1     ------> ADC1_IN9
     */
-    HAL_GPIO_DeInit(PM1_VTEMP_GPIO_Port, PM1_VTEMP_Pin);
+    HAL_GPIO_DeInit(GPIOA, PM1_VTEMP_Pin|GPIO_PIN_6);
 
     HAL_GPIO_DeInit(PM1_VBUS_GPIO_Port, PM1_VBUS_Pin);
 
@@ -303,7 +305,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     PA6     ------> ADC2_IN6
     PB0     ------> ADC2_IN8
     */
-    HAL_GPIO_DeInit(GPIOA, PM1_AMPW_Pin|PM1_AMPV_Pin);
+    HAL_GPIO_DeInit(GPIOA, PM1_AMPW_Pin|GPIO_PIN_6);
 
     HAL_GPIO_DeInit(PM1_AMPU_GPIO_Port, PM1_AMPU_Pin);
 

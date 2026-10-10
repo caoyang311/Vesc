@@ -110,6 +110,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_DAC_Init();
   MX_TIM6_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   /* 硬件板级初始化 */
   Board_Dac_Init();

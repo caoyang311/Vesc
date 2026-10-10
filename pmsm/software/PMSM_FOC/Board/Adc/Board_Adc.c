@@ -5,7 +5,7 @@
 #include "Sensor_Tamagawa.h"
 #include "Dio.h"
 #include <stddef.h>
-
+#include <tim.h>
 /**
  * @brief ADC channel configuration structure.
  */
@@ -214,6 +214,7 @@ Adc_Result Adc_Start(void)
                     Adc_ErrorFlag = 1U;
                     result = ADC_RESULT_HAL_ERROR;
                 }
+                HAL_TIM_Base_Start(&htim2);
             }
 
             if (Adc_InjectedChannelCount[instance] > 0U)
@@ -258,6 +259,7 @@ Adc_Result Adc_Stop(void)
             {
                 result = ADC_RESULT_HAL_ERROR;
             }
+            HAL_TIM_Base_Stop(&htim2);
         }
 
         for (instance = (uint32_t)ADC_INSTANCE_1; instance < (uint32_t)ADC_INSTANCE_COUNT; instance++)
