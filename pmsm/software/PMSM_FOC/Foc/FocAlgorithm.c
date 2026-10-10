@@ -21,6 +21,8 @@
 #define FOC_ALGORITHM_PHASE_SCALE         (4294967296.0F)  /* 2^32相位单位 */
 #define FOC_ALGORITHM_PHASE_OUTPUT_SHIFT  (16U)
 
+static uint8_t FocAlgorithm_CurrentSector = 1U;
+
 /** @brief 根据输入频率生成内部电角度相位。 */
 void FocAlgorithm_GenerateAngle(float frequency_hz,
                                 uint16_t * phase);
@@ -80,6 +82,16 @@ void FocAlgorithm_GenerateAngle(float frequency_hz,
 
     accumulator = next_accumulator;
     *phase = next_phase;
+}
+
+/**
+ * @brief 获取最近一次SVPWM计算得到的扇区。
+ *
+ * @return 当前扇区，范围为1至6。
+ */
+uint8_t FocAlgorithm_GetSector(void)
+{
+    return FocAlgorithm_CurrentSector;
 }
 
 /**
@@ -193,6 +205,7 @@ void FocAlgorithm_Svpwm(const Foc_Volt_AlphaBetaType * alpha_beta,
     {
         /* 零矢量或边界状态保持默认Sector 1。 */
     }
+    FocAlgorithm_CurrentSector = sector;
 
     /*
         * 伏秒平衡公共系数：K = sqrt(3) * Ts / Udc。

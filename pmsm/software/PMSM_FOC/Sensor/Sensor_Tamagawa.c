@@ -2,9 +2,11 @@
 #include "Board_485.h"
 #include <string.h>
 
-static uint32_t Sensor_Tamagawa_RawCount; /**< 原始计数 */
-static bool Sensor_Tamagawa_DataValid; /**< 数据有效标志 */
-static bool Sensor_Tamagawa_RequestPending; /**< 请求待处理标志 */
+static uint32_t Sensor_Tamagawa_RawCount = 0U; /**< 原始计数 */
+static uint16_t Sensor_Tamagawa_ElectricalPhaseOffset = 0U; /**< 电气零位偏移 */
+static bool Sensor_Tamagawa_ElectricalOffsetValid = false; /**< 电气零位有效 */
+static bool Sensor_Tamagawa_DataValid = false; /**< 数据有效标志 */
+static bool Sensor_Tamagawa_RequestPending = false; /**< 请求待处理标志 */
 
 /**
  * @brief 计算8位CRC校验和
@@ -74,6 +76,8 @@ static bool Sensor_Tamagawa_ParseResponse(
 void Sensor_Tamagawa_Init(void)
 {
     Sensor_Tamagawa_RawCount = 0U;
+    Sensor_Tamagawa_ElectricalPhaseOffset = 0U;
+    Sensor_Tamagawa_ElectricalOffsetValid = false;
     Sensor_Tamagawa_DataValid = false;
     Sensor_Tamagawa_RequestPending = false;
 }
@@ -147,9 +151,14 @@ float Sensor_Tamagawa_GetElectricalAngleRad(uint8_t pole_pairs)
 
     return electrical_angle;
 }
+/**
+ * @brief 获取电气相位（65536分）
+ * @param pole_pairs 极对数
+ * @return uint16_t 电气相位（65536分）
+ */
 uint16_t Sensor_Tamagawa_GetElectricalPhase(uint8_t pole_pairs)
 {
-    uint32_t electrical_count;
+    uint32_t electrical_count = 0U;
 
     electrical_count = Sensor_Tamagawa_RawCount *
                        (uint32_t)pole_pairs;
@@ -157,6 +166,40 @@ uint16_t Sensor_Tamagawa_GetElectricalPhase(uint8_t pole_pairs)
     return (uint16_t)((electrical_count * 65536ULL) /
                       SENSOR_TAMAGAWA_RESOLUTION);
 }
+/**
+ * @brief 获取电气相位（65536分）并应用偏移量
+ * @param pole_pairs 极对数
+ * @return uint16_t 电气相位（65536分）并应用偏移量
+ */
+uint16_t Sensor_Tamagawa_GetElectricalPhaseWithOffset(uint8_t pole_pairs)
+{
+    uint16_t electrical_phase = 0U;
+    uint16_t corrected_phase = 0U;
+
+    electrical_phase = Sensor_Tamagawa_GetElectricalPhase(pole_pairs);
+    corrected_phase = (uint16_t)(electrical_phase -
+                                 Sensor_Tamagawa_ElectricalPhaseOffset);
+
+    return corrected_phase;
+}
+/**
+ * @brief 设置电气相位偏移量
+ * @param offset 偏移量（65536分）
+ */
+void Sensor_Tamagawa_SetElectricalPhaseOffset(uint16_t offset)
+{
+    Sensor_Tamagawa_ElectricalPhaseOffset = offset;
+    Sensor_Tamagawa_ElectricalOffsetValid = true;
+}
+/**
+ * @brief 检查电气相位偏移量是否有效
+ * @return bool 是否有效
+ */
+bool Sensor_Tamagawa_IsElectricalOffsetValid(void)
+{
+    return Sensor_Tamagawa_ElectricalOffsetValid;
+}
+
 /**
  * @brief 检查数据是否有效
  * @return bool 是否有效

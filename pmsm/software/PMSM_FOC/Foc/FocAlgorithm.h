@@ -115,8 +115,14 @@ void FocAlgorithm_GenerateAngle(float frequency_hz,
  * @param[in] dc_bus_voltage 实时母线电压，单位V，指针不得为NULL。
  * @param[out] compare 三相PWM比较值，指针不得为NULL。
  */
-void FocAlgorithm_Svpwm(const Foc_Volt_AlphaBetaType * alpha_beta,
+ void FocAlgorithm_Svpwm(const Foc_Volt_AlphaBetaType * alpha_beta,
                         const float * dc_bus_voltage,
                         Foc_PwmCompareType * compare);
+/**
+ * @brief 获取最近一次SVPWM计算得到的扇区。
+ *
+ * @return 当前扇区，范围为1至6。
+ */
+uint8_t FocAlgorithm_GetSector(void);
 
 #endif /* FOC_ALGORITHM_H */

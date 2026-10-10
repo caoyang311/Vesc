@@ -17,6 +17,9 @@ uint32_t Sensor_Tamagawa_GetRawCount(void);
 float Sensor_Tamagawa_GetMechanicalAngleRad(void);
 float Sensor_Tamagawa_GetElectricalAngleRad(uint8_t pole_pairs);
 uint16_t Sensor_Tamagawa_GetElectricalPhase(uint8_t pole_pairs);
+uint16_t Sensor_Tamagawa_GetElectricalPhaseWithOffset(uint8_t pole_pairs);
+void Sensor_Tamagawa_SetElectricalPhaseOffset(uint16_t offset);
+bool Sensor_Tamagawa_IsElectricalOffsetValid(void);
 bool Sensor_Tamagawa_IsDataValid(void);
 void Sensor_Tamagawa_ClearDataValid(void);
 

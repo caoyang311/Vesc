@@ -7,7 +7,7 @@
 #define FOC_CURRENT_AMPLIFIER_GAIN          (6.0F)   /**< 电流放大器增益 */
 #define FOC_CURRENT_BIAS_SAMPLE_COUNT       (64U)    /**< 偏置采样点数 */
 
-static Foc_PhCurrentType FocCurrent_Current = {0};
+static Foc_PhaseCurrentType FocCurrent_Current = {0};
 static Foc_PhCurrentBiasValueType FocCurrent_BiasValue = {0};
 static Foc_PhCurrentBiasVoltageType FocCurrent_BiasVoltage = {0};   
 /**
@@ -36,7 +36,7 @@ static float FocCurrent_AdcToCurrent(Adc_ValueType adc_value,
  */
 void FocCurrent_Init(void)
 {
-    FocCurrent_Current = (Foc_PhCurrentType){0};
+    FocCurrent_Current = (Foc_PhaseCurrentType){0};
     FocCurrent_BiasValue = (Foc_PhCurrentBiasValueType){0};
 }
 /**
@@ -84,31 +84,80 @@ void FocCurrent_CalibrateBiasVoltage(void)
 }
 
 /**
- * @brief 更新三相实时电流，单位为A。
+ * @brief 根据当前SVPWM扇区采样两相，并计算第三相电流。
+ *
+ * 低端导通时间最短的相不参与本周期采样，另外两相直接读取；第三相
+ * 根据基尔霍夫电流定律计算：Iu + Iv + Iw = 0。
  *
  * @param[out] phase_current 三相电流输出，指针不得为NULL。
- * @return 采样成功返回true，否则返回false。
  */
-void FocCurrent_Update(Foc_PhCurrentType * phase_current)
+void FocCurrent_SamplePhaseCurrent(Foc_PhaseCurrentType * phase_current)
 {
     Adc_ValueType adc_u = 0U;
     Adc_ValueType adc_v = 0U;
     Adc_ValueType adc_w = 0U;
-    Foc_PhCurrentType result = {0};
+    Foc_PhaseCurrentType result = {0};
+    uint8_t sector = 0U;
 
-    if (phase_current != NULL)
+    sector = FocAlgorithm_GetSector();
+
+    if ((sector == 1U) || (sector == 6U))
     {
-        if ((Adc_ReadChannel(ADC_CH_ID_PHASE_U_CURRENT, &adc_u) == ADC_RESULT_OK) &&
-            (Adc_ReadChannel(ADC_CH_ID_PHASE_V_CURRENT, &adc_v) == ADC_RESULT_OK) &&
+        /* Sector 1/6：U相低端导通时间最短，采样V、W相。 */
+        if ((Adc_ReadChannel(ADC_CH_ID_PHASE_V_CURRENT, &adc_v) == ADC_RESULT_OK) &&
             (Adc_ReadChannel(ADC_CH_ID_PHASE_W_CURRENT, &adc_w) == ADC_RESULT_OK))
         {
-            result.phase_u = FocCurrent_AdcToCurrent(adc_u, FocCurrent_BiasValue.phase_u_bias_value);
-            result.phase_v = FocCurrent_AdcToCurrent(adc_v, FocCurrent_BiasValue.phase_v_bias_value);
-            result.phase_w = FocCurrent_AdcToCurrent(adc_w, FocCurrent_BiasValue.phase_w_bias_value);
-
+            result.phase_v = FocCurrent_AdcToCurrent(
+                adc_v, FocCurrent_BiasValue.phase_v_bias_value);
+            result.phase_w = FocCurrent_AdcToCurrent(
+                adc_w, FocCurrent_BiasValue.phase_w_bias_value);
+            result.phase_u = -(result.phase_v + result.phase_w);
             FocCurrent_Current = result;
             *phase_current = result;
         }
+        else
+        {
+        }
+    }
+    else if ((sector == 2U) || (sector == 3U))
+    {
+        /* Sector 2/3：V相低端导通时间最短，采样U、W相。 */
+        if ((Adc_ReadChannel(ADC_CH_ID_PHASE_U_CURRENT, &adc_u) == ADC_RESULT_OK) &&
+            (Adc_ReadChannel(ADC_CH_ID_PHASE_W_CURRENT, &adc_w) == ADC_RESULT_OK))
+        {
+            result.phase_u = FocCurrent_AdcToCurrent(
+                adc_u, FocCurrent_BiasValue.phase_u_bias_value);
+            result.phase_w = FocCurrent_AdcToCurrent(
+                adc_w, FocCurrent_BiasValue.phase_w_bias_value);
+            result.phase_v = -(result.phase_u + result.phase_w);
+            FocCurrent_Current = result;
+            *phase_current = result;
+        }
+        else
+        {
+        }
+    }
+    else if ((sector == 4U) || (sector == 5U))
+    {
+        /* Sector 4/5：W相低端导通时间最短，采样U、V相。 */
+        if ((Adc_ReadChannel(ADC_CH_ID_PHASE_U_CURRENT, &adc_u) == ADC_RESULT_OK) &&
+            (Adc_ReadChannel(ADC_CH_ID_PHASE_V_CURRENT, &adc_v) == ADC_RESULT_OK))
+        {
+            result.phase_u = FocCurrent_AdcToCurrent(
+                adc_u, FocCurrent_BiasValue.phase_u_bias_value);
+            result.phase_v = FocCurrent_AdcToCurrent(
+                adc_v, FocCurrent_BiasValue.phase_v_bias_value);
+            result.phase_w = -(result.phase_u + result.phase_v);
+            FocCurrent_Current = result;
+            *phase_current = result;
+        }
+        else
+        {
+        }
+    }
+    else
+    {
+        /* 扇区无效时保持上一组有效电流。 */
     }
 }
 /**

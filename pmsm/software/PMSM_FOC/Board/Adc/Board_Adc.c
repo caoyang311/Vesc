@@ -2,6 +2,7 @@
 #include "Adc_Config.h"
 #include "Motor.h"
 #include "Motor_VF.h"
+#include "Motor_IF.h"
 #include "Sensor_Tamagawa.h"
 #include "Dio.h"
 #include <stddef.h>
@@ -394,6 +395,13 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
         if (Motor_GetMode() == MOTOR_MODE_VF)
         {
             Motor_VF_ControlFunction();
+        }
+        else if (Motor_GetMode() == MOTOR_MODE_IF)
+        {
+            Motor_IF_ControlFunction();
+        }
+        else
+        {
         }
 
         Sensor_Tamagawa_RequestAngle();/*请求角度*/

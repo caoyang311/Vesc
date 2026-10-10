@@ -3,13 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
-typedef struct
-{
-    float phase_u;
-    float phase_v;
-    float phase_w;
-} Foc_PhCurrentType;
+#include "FocAlgorithm.h"
 
 typedef struct
 {
@@ -42,9 +36,8 @@ void FocCurrent_CalibrateBiasVoltage(void);
  * @brief 更新三相实时电流，单位为A。
  *
  * @param[out] phase_current 三相电流输出，指针不得为NULL。
- * @return 采样成功返回true，否则返回false。
  */
-void FocCurrent_Update(Foc_PhCurrentType * phase_current);
+void FocCurrent_SamplePhaseCurrent(Foc_PhaseCurrentType * phase_current);
 
 /**
  * @brief 获取当前三相偏置电压，单位为V。

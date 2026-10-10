@@ -48,7 +48,7 @@ typedef struct
     uint16_t ElectricalAngle;
     float ElectricalFrequencyHz;
     uint32_t PrepositionTick;
-    Foc_PhCurrentType Current;
+    Foc_PhaseCurrentType Current;
     Motor_VfStateIdType State;
 } Motor_VF_Type;
 
@@ -159,7 +159,7 @@ static void Motor_VF_RunForceDrag(void)
         Motor_VfState.ElectricalFrequencyHz = MOTOR_VF_TARGET_FREQUENCY_HZ;
     }
     debug[0] = Sensor_Tamagawa_GetElectricalPhase(MOTOR_VF_POLE_PAIRS);/** 获取电机角度 */
-    FocCurrent_Update(&Motor_VfState.Current);/** 更新相电流采样 */
+    FocCurrent_SamplePhaseCurrent(&Motor_VfState.Current);/** 更新相电流采样 */
     FocAlgorithm_GenerateAngle(Motor_VfState.ElectricalFrequencyHz,&Motor_VfState.ElectricalAngle);/** 更新电机角度 */
     voltage_magnitude_v = Motor_VF_CalculateVoltage(Motor_VfState.ElectricalFrequencyHz);/** 根据电机频率Hz，计算V/F输出电压 */
     Motor_VF_OutputVoltage(MOTOR_VF_D_AXIS_RATIO * voltage_magnitude_v,
