@@ -104,6 +104,7 @@ static float Motor_VF_CalculateVoltage(float frequency_hz)
  */
 static void Motor_VF_OutputVoltage(float voltage_d, float voltage_q)
 {
+    float debug[3] = {0.0F, 0.0F, 0.0F};
     Motor_VfState.VoltageDq.Vd = voltage_d;
     Motor_VfState.VoltageDq.Vq = voltage_q;
 
@@ -124,6 +125,10 @@ static void Motor_VF_OutputVoltage(float voltage_d, float voltage_q)
     Pwm_Set_UVW_CCR(Motor_VfState.PwmCompare.compare_u,
                     Motor_VfState.PwmCompare.compare_v,
                     Motor_VfState.PwmCompare.compare_w);
+    debug[0] = Motor_VfState.PwmCompare.compare_u;
+    debug[1] = Motor_VfState.PwmCompare.compare_v;
+    debug[2] = Motor_VfState.PwmCompare.compare_w;
+    Com_Uart_SendJustFloat(debug, 3);                 
 }
 /**
  * @brief 预定位。
@@ -139,7 +144,7 @@ static void Motor_VF_RunPreposition(void)
 static void Motor_VF_RunForceDrag(void)
 {
     float voltage_magnitude_v = 0.0F;
-    float debug[2] = {0.0F, 0.0F};
+    //float debug[3] = {0.0F, 0.0F};
     if (Motor_VfState.ElectricalFrequencyHz < MOTOR_VF_TARGET_FREQUENCY_HZ)
     {
         Motor_VfState.ElectricalFrequencyHz += MOTOR_VF_FREQUENCY_STEP_HZ;
@@ -158,15 +163,17 @@ static void Motor_VF_RunForceDrag(void)
     {
         Motor_VfState.ElectricalFrequencyHz = MOTOR_VF_TARGET_FREQUENCY_HZ;
     }
-    debug[0] = Sensor_Tamagawa_GetElectricalPhase(MOTOR_VF_POLE_PAIRS);/** 获取电机角度 */
+    Sensor_Tamagawa_GetElectricalPhase(MOTOR_VF_POLE_PAIRS);/** 获取电机角度 */
     FocCurrent_SamplePhaseCurrent(&Motor_VfState.Current);/** 更新相电流采样 */
     FocAlgorithm_GenerateAngle(Motor_VfState.ElectricalFrequencyHz,&Motor_VfState.ElectricalAngle);/** 更新电机角度 */
     voltage_magnitude_v = Motor_VF_CalculateVoltage(Motor_VfState.ElectricalFrequencyHz);/** 根据电机频率Hz，计算V/F输出电压 */
     Motor_VF_OutputVoltage(MOTOR_VF_D_AXIS_RATIO * voltage_magnitude_v,
                            MOTOR_VF_Q_AXIS_RATIO * voltage_magnitude_v);/** 输出V/F电压 */
     /** 发送调试数据 */
-    debug[1] = (float)Motor_VfState.ElectricalAngle;
-    Com_Uart_SendJustFloat(debug, 2);                        
+    // debug[0] = Motor_VfState.Current.phase_u;
+    // debug[1] = Motor_VfState.Current.phase_v;
+    // debug[2] = Motor_VfState.Current.phase_w;
+    //Com_Uart_SendJustFloat(debug, 3);                        
 }
 /**
  * @brief 初始化V/F控制。

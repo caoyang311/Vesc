@@ -2,12 +2,12 @@
 
 
 //力矩PID默认值
-#define PID_IQ_KP_DEFAULT  ((float)(1.5f))     
-#define PID_IQ_KI_DEFAULT  ((float)(500.0f))
+#define PID_IQ_KP_DEFAULT  ((float)(0.25f))     
+#define PID_IQ_KI_DEFAULT  ((float)(0.06f))
 #define PID_IQ_KD_DEFAULT  ((float)(0.0f))
 //磁链PID默认值
-#define PID_ID_KP_DEFAULT  ((float)(1.5f)) 
-#define PID_ID_KI_DEFAULT  ((float)(500.0f))
+#define PID_ID_KP_DEFAULT  ((float)(0.25f)) 
+#define PID_ID_KI_DEFAULT  ((float)(0.06f))
 #define PID_ID_KD_DEFAULT  ((float)(0.0f))
 //电流PID输出限幅
 #define ID_LOWER_LIMIT   ((float)(-32.0f))

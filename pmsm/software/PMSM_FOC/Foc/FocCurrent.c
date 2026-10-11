@@ -107,9 +107,9 @@ void FocCurrent_SamplePhaseCurrent(Foc_PhaseCurrentType * phase_current)
         if ((Adc_ReadChannel(ADC_CH_ID_PHASE_V_CURRENT, &adc_v) == ADC_RESULT_OK) &&
             (Adc_ReadChannel(ADC_CH_ID_PHASE_W_CURRENT, &adc_w) == ADC_RESULT_OK))
         {
-            result.phase_v = FocCurrent_AdcToCurrent(
+            result.phase_v = -FocCurrent_AdcToCurrent(
                 adc_v, FocCurrent_BiasValue.phase_v_bias_value);
-            result.phase_w = FocCurrent_AdcToCurrent(
+            result.phase_w = -FocCurrent_AdcToCurrent(
                 adc_w, FocCurrent_BiasValue.phase_w_bias_value);
             result.phase_u = -(result.phase_v + result.phase_w);
             FocCurrent_Current = result;
@@ -125,9 +125,9 @@ void FocCurrent_SamplePhaseCurrent(Foc_PhaseCurrentType * phase_current)
         if ((Adc_ReadChannel(ADC_CH_ID_PHASE_U_CURRENT, &adc_u) == ADC_RESULT_OK) &&
             (Adc_ReadChannel(ADC_CH_ID_PHASE_W_CURRENT, &adc_w) == ADC_RESULT_OK))
         {
-            result.phase_u = FocCurrent_AdcToCurrent(
+            result.phase_u = -FocCurrent_AdcToCurrent(
                 adc_u, FocCurrent_BiasValue.phase_u_bias_value);
-            result.phase_w = FocCurrent_AdcToCurrent(
+            result.phase_w = -FocCurrent_AdcToCurrent(
                 adc_w, FocCurrent_BiasValue.phase_w_bias_value);
             result.phase_v = -(result.phase_u + result.phase_w);
             FocCurrent_Current = result;
@@ -143,9 +143,9 @@ void FocCurrent_SamplePhaseCurrent(Foc_PhaseCurrentType * phase_current)
         if ((Adc_ReadChannel(ADC_CH_ID_PHASE_U_CURRENT, &adc_u) == ADC_RESULT_OK) &&
             (Adc_ReadChannel(ADC_CH_ID_PHASE_V_CURRENT, &adc_v) == ADC_RESULT_OK))
         {
-            result.phase_u = FocCurrent_AdcToCurrent(
+            result.phase_u = -FocCurrent_AdcToCurrent(
                 adc_u, FocCurrent_BiasValue.phase_u_bias_value);
-            result.phase_v = FocCurrent_AdcToCurrent(
+            result.phase_v = -FocCurrent_AdcToCurrent(
                 adc_v, FocCurrent_BiasValue.phase_v_bias_value);
             result.phase_w = -(result.phase_u + result.phase_v);
             FocCurrent_Current = result;

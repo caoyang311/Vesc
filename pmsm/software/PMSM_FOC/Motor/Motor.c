@@ -33,12 +33,12 @@ void Motor_Init(void)
     Motor_Position_Init();
     Motor_Identification_Init();
     FocLpf_Init(&Motor_DcBusVoltageFilter, 0.2f);
-    Motor_CurrentMode = MOTOR_MODE_VF;
+    Motor_CurrentMode = MOTOR_MODE_IF;
     Motor_IsRunning = false;
     Motor_DcBusVoltageV = 0.0F;
     Adc_Start();/*启动ADC转换*/
     Pwm_StartAdcTrigger();/*开启定时器触发ADC转换*/
-    Sensor_Tamagawa_RequestAngle();/*读取电机初始角度*/
+    //Sensor_Tamagawa_RequestAngle();/*读取电机初始角度*/
 }
 /**
  * @brief 设置电机模式。
@@ -98,9 +98,10 @@ void Motor_Start(void)
 {
     if (Motor_IsRunning == false)
     {
-        Motor_IsRunning = true;
-        Dio_WriteChannel(DIO_CHANNEL_PM1_CTRL_SD,STD_HIGH);/*使能Mosfet输出*/
+        Pwm_Set_UVW_CCR(0U, 0U, 0U);
         Pwm_Start();/*开启PWM输出*/
+        Dio_WriteChannel(DIO_CHANNEL_PM1_CTRL_SD,STD_HIGH);/*使能Mosfet输出*/
+        Motor_IsRunning = true;
     }
 }
 /**
@@ -111,6 +112,7 @@ void Motor_Stop(void)
     if (Motor_IsRunning == true)
     {
         Motor_IsRunning = false;
+        Pwm_Set_UVW_CCR(0U, 0U, 0U);
         Pwm_Stop();/*关闭PWM输出*/    
         Dio_WriteChannel(DIO_CHANNEL_PM1_CTRL_SD,STD_LOW);/*关闭Mosfet输出*/
     }

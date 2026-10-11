@@ -7,16 +7,17 @@
 #include "Motor.h"
 #include "Pwm.h"
 #include "Sensor_Tamagawa.h"
+#include "Com.h"
 
 #define MOTOR_IF_POLE_PAIRS                 (5U)      /**< 电机极对数 */
 #define MOTOR_IF_CONTROL_FREQUENCY_HZ      (10000.0F) /**< 控制频率 */
 #define MOTOR_IF_PREPOSITION_TIME_S         (0.5F)    /**< 预定位时间 */
-#define MOTOR_IF_TARGET_FREQUENCY_HZ        (30.0F)   /**< 目标电频率 */
+#define MOTOR_IF_TARGET_FREQUENCY_HZ        (10.0F)   /**< 目标电频率 */
 #define MOTOR_IF_FREQUENCY_RAMP_TIME_S      (0.5F)    /**< 频率坡度时间 */
 #define MOTOR_IF_PREPOSITION_ID_REFERENCE_A (2.0F)    /**< 预定位D轴参考电流 */
-#define MOTOR_IF_FORCE_DRAG_IQ_REFERENCE_A  (2.0F)    /**< 强拖Q轴参考电流 */
+#define MOTOR_IF_FORCE_DRAG_IQ_REFERENCE_A  (1.0F)    /**< 强拖Q轴参考电流 */
 #define MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A (0.0F)    /**< 闭环D轴参考电流 */
-#define MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A (1.0F)    /**< 闭环Q轴参考电流 */
+#define MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A (1.5F)    /**< 闭环Q轴参考电流 */
 #define MOTOR_IF_PREPOSITION_CURRENT_RAMP_TIME_S (0.2F) /**< 预定位电流斜坡时间 */
 #define MOTOR_IF_FORCE_DRAG_CURRENT_RAMP_TIME_S (0.2F)  /**< 强拖电流斜坡时间 */
 #define MOTOR_IF_CLOSED_LOOP_CURRENT_RAMP_TIME_S (0.2F) /**< 闭环电流斜坡时间 */
@@ -128,7 +129,7 @@ static void Motor_IF_ResetState(void)
 {
     Motor_IF_State = (Motor_IFStateType){0};
     Motor_IF_State.State = MOTOR_IF_STATE_IDLE;
-    Motor_IF_State.AngleSource = MOTOR_IF_ANGLE_SOURCE_MANUAL;
+    Motor_IF_State.AngleSource = MOTOR_IF_ANGLE_SOURCE_SENSOR;
     Motor_IF_State.SensorZeroCalibrated = Sensor_Tamagawa_IsElectricalOffsetValid();
     PID_Reset();
 }
@@ -148,6 +149,8 @@ static void Motor_IF_RunPreposition(void)
         Motor_IF_State.IqReferenceA,
         0.0F,
         MOTOR_IF_PREPOSITION_CURRENT_STEP_A);
+    // Motor_IF_State.IdReferenceA = 1.0F;
+    // Motor_IF_State.IqReferenceA = 0.0F;
     Motor_IF_RunCurrentLoop();
 
     if ((Motor_IF_State.AngleSource == MOTOR_IF_ANGLE_SOURCE_SENSOR) &&
@@ -204,6 +207,7 @@ static void Motor_IF_RunCurrentLoop(void)
     float id_output_v = 0.0F;
     float iq_output_v = 0.0F;
     float dc_bus_voltage_v = 0.0F;
+    float debug[3] = {0.0F};
 
     FocCurrent_SamplePhaseCurrent(&Motor_IF_State.Current);
     FocAlgorithm_Clarke(&Motor_IF_State.Current,
@@ -225,6 +229,8 @@ static void Motor_IF_RunCurrentLoop(void)
 
     Motor_IF_State.VoltageDq.Vd = id_output_v;
     Motor_IF_State.VoltageDq.Vq = iq_output_v;
+    // Motor_IF_State.VoltageDq.Vd = 1.0F;
+    // Motor_IF_State.VoltageDq.Vq = 0.0F;    
     FocAlgorithm_InversePark(&Motor_IF_State.VoltageDq,
                              &Motor_IF_State.Trig,
                              &Motor_IF_State.VoltageAlphaBeta);
@@ -244,6 +250,16 @@ static void Motor_IF_RunCurrentLoop(void)
     Pwm_Set_UVW_CCR(Motor_IF_State.PwmCompare.compare_u,
                     Motor_IF_State.PwmCompare.compare_v,
                     Motor_IF_State.PwmCompare.compare_w);
+    debug[0] = Motor_IF_State.Current.phase_u;
+    debug[1] = Motor_IF_State.Current.phase_v;
+    debug[2] = Motor_IF_State.Current.phase_w;
+    // debug[2] = Motor_IF_State.CurrentDq.Iq;
+    // debug[1] = Motor_IF_State.CurrentDq.Id;
+    // debug[0] = Motor_IF_State.IdReferenceA;
+    // debug[0] = Motor_IF_State.PwmCompare.compare_u;
+    // debug[1] = Motor_IF_State.PwmCompare.compare_v;
+    // debug[2] = Motor_IF_State.PwmCompare.compare_w;    
+    Com_Uart_SendJustFloat(debug, 3);
 }
 /**
  * @brief 初始化IF。
@@ -363,5 +379,6 @@ void Motor_IF_MainFunction(void)
     if (Motor_GetIsRunning() == false)
     {
         Motor_IF_ResetState();
+        FocCurrent_CalibrateBiasVoltage();
     }
 }
