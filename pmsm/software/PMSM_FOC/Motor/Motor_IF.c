@@ -11,15 +11,24 @@
 
 #define MOTOR_IF_POLE_PAIRS                 (5U)      /**< 电机极对数 */
 #define MOTOR_IF_CONTROL_FREQUENCY_HZ      (10000.0F) /**< 控制频率 */
+#define MOTOR_IF_CONTROL_PERIOD_S          (1.0F / MOTOR_IF_CONTROL_FREQUENCY_HZ) /**< 控制周期 */
+#define MOTOR_IF_TWO_PI                    (6.2831853072F) /**< 2π */
+#define MOTOR_IF_LD                         (0.00028F)    /**< D轴电感 单位：H */
+#define MOTOR_IF_LQ                         (0.00028F)    /**< Q轴电感 单位：H */
+#define MOTOR_IF_FLUX                       (0.011F)    /**< 磁链 单位：Wb */
+
+
 #define MOTOR_IF_PREPOSITION_TIME_S         (0.5F)    /**< 预定位时间 */
-#define MOTOR_IF_TARGET_FREQUENCY_HZ        (10.0F)   /**< 目标电频率 */
-#define MOTOR_IF_FREQUENCY_RAMP_TIME_S      (0.5F)    /**< 频率坡度时间 */
 #define MOTOR_IF_PREPOSITION_ID_REFERENCE_A (2.0F)    /**< 预定位D轴参考电流 */
+#define MOTOR_IF_PREPOSITION_CURRENT_RAMP_TIME_S (0.2F) /**< 预定位电流斜坡时间 */
+
+#define MOTOR_IF_TARGET_FREQUENCY_HZ        (10.0F)   /**< 强拖目标电频率 */
+#define MOTOR_IF_FREQUENCY_RAMP_TIME_S      (0.5F)    /**< 强拖频率斜坡时间 */
 #define MOTOR_IF_FORCE_DRAG_IQ_REFERENCE_A  (1.0F)    /**< 强拖Q轴参考电流 */
+#define MOTOR_IF_FORCE_DRAG_CURRENT_RAMP_TIME_S (0.2F)  /**< 强拖电流斜坡时间 */
+
 #define MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A (0.0F)    /**< 闭环D轴参考电流 */
 #define MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A (1.5F)    /**< 闭环Q轴参考电流 */
-#define MOTOR_IF_PREPOSITION_CURRENT_RAMP_TIME_S (0.2F) /**< 预定位电流斜坡时间 */
-#define MOTOR_IF_FORCE_DRAG_CURRENT_RAMP_TIME_S (0.2F)  /**< 强拖电流斜坡时间 */
 #define MOTOR_IF_CLOSED_LOOP_CURRENT_RAMP_TIME_S (0.2F) /**< 闭环电流斜坡时间 */
 /**
  * @brief 预定位计数。
@@ -75,9 +84,11 @@ typedef struct
     Foc_PhaseCurrentType Current; /**< 三相电流 */
     Foc_Curr_AlphaBetaType CurrentAlphaBeta; /**< 电流AlphaBeta */
     Foc_Curr_DqType CurrentDq; /**< 电流Dq */
+    Foc_VoltageLimitType VoltageLimit; /**< 电压限制 */
     uint16_t ElectricalAngle; /**< 电气相位 */
     uint32_t PrepositionTick; /**< 预定位计数 */
     float ElectricalFrequencyHz; /**< 电气频率 */
+    float ElectricalSpeed; /**< 电气速度 */
     float IdReferenceA; /**< 当前D轴参考电流 */
     float IqReferenceA; /**< 当前Q轴参考电流 */
     bool SensorZeroCalibrated; /**< 传感器零偏校准状态 */
@@ -204,38 +215,74 @@ static void Motor_IF_RunForceDrag(void)
  */
 static void Motor_IF_RunCurrentLoop(void)
 {
-    float id_output_v = 0.0F;
-    float iq_output_v = 0.0F;
     float dc_bus_voltage_v = 0.0F;
     float debug[3] = {0.0F};
-
+    float voltage_limit_v = 0.0F;
+    /*采样电流*/
     FocCurrent_SamplePhaseCurrent(&Motor_IF_State.Current);
+    /*转换为AlphaBeta坐标系*/
     FocAlgorithm_Clarke(&Motor_IF_State.Current,
                         &Motor_IF_State.CurrentAlphaBeta);
     FocTrig_GetSinCos(Motor_IF_State.ElectricalAngle,
                         &Motor_IF_State.Trig);
     FocAlgorithm_Park(&Motor_IF_State.CurrentAlphaBeta,
-                        &Motor_IF_State.Trig,
-                        &Motor_IF_State.CurrentDq);
+                      &Motor_IF_State.Trig,
+                      &Motor_IF_State.CurrentDq);
+    /*电角速度计算*/
+    if (Motor_IF_State.AngleSource == MOTOR_IF_ANGLE_SOURCE_SENSOR)
+    {
+        Sensor_Tamagawa_SampleSpeed(MOTOR_IF_CONTROL_PERIOD_S,
+                                    MOTOR_IF_POLE_PAIRS);
+        Motor_IF_State.ElectricalSpeed =
+            Sensor_Tamagawa_GetElectricalAngularSpeedRadS();
+    }
+    else
+    {
+        Motor_IF_State.ElectricalSpeed =
+            MOTOR_IF_TWO_PI * Motor_IF_State.ElectricalFrequencyHz;
+    }
+    dc_bus_voltage_v = Motor_GetDcBusVoltage();
+    voltage_limit_v = dc_bus_voltage_v * 0.5773502692F;
 
     Current_PID_Calc(Motor_IF_State.IdReferenceA,
                      Motor_IF_State.CurrentDq.Id,
                      &ID_InitStructure,
-                     &id_output_v);
+                     MOTOR_IF_CONTROL_PERIOD_S,
+                     &Motor_IF_State.VoltageDq.Vd);
+
     Current_PID_Calc(Motor_IF_State.IqReferenceA,
                      Motor_IF_State.CurrentDq.Iq,
                      &IQ_InitStructure,
-                     &iq_output_v);
+                     MOTOR_IF_CONTROL_PERIOD_S,
+                     &Motor_IF_State.VoltageDq.Vq);
+    /*解耦反馈*/
+    FocAlgorithm_DecouplingFeedforward(
+        &Motor_IF_State.CurrentDq,
+        Motor_IF_State.ElectricalSpeed,
+        MOTOR_IF_LD,
+        MOTOR_IF_LQ,
+        MOTOR_IF_FLUX,
+        FOC_DECOUPLING_CROSS,
+        &Motor_IF_State.VoltageDq);
 
-    Motor_IF_State.VoltageDq.Vd = id_output_v;
-    Motor_IF_State.VoltageDq.Vq = iq_output_v;
-    // Motor_IF_State.VoltageDq.Vd = 1.0F;
-    // Motor_IF_State.VoltageDq.Vq = 0.0F;    
+    (void)FocAlgorithm_LimitVoltage(
+        &Motor_IF_State.VoltageDq,
+        voltage_limit_v,
+        1.0F,
+        1.0F,
+        1.0F,
+        &Motor_IF_State.VoltageLimit);
+
+    Current_PID_LimitIntegralDq(
+        &ID_InitStructure,
+        &IQ_InitStructure,
+        &Motor_IF_State.VoltageLimit);
+
+    /*逆Park变换*/
     FocAlgorithm_InversePark(&Motor_IF_State.VoltageDq,
                              &Motor_IF_State.Trig,
                              &Motor_IF_State.VoltageAlphaBeta);
-
-    dc_bus_voltage_v = Motor_GetDcBusVoltage();
+    /*SVPWM*/
     if (dc_bus_voltage_v > 0.0F)
     {
         FocAlgorithm_Svpwm(&Motor_IF_State.VoltageAlphaBeta,
@@ -246,7 +293,7 @@ static void Motor_IF_RunCurrentLoop(void)
     {
         Motor_IF_State.PwmCompare = (Foc_PwmCompareType){0};
     }
-
+    /*设置PWM占空比*/
     Pwm_Set_UVW_CCR(Motor_IF_State.PwmCompare.compare_u,
                     Motor_IF_State.PwmCompare.compare_v,
                     Motor_IF_State.PwmCompare.compare_w);

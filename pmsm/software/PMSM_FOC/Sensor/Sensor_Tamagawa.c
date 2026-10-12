@@ -7,6 +7,11 @@ static uint16_t Sensor_Tamagawa_ElectricalPhaseOffset = 0U; /**< 电气零位偏
 static bool Sensor_Tamagawa_ElectricalOffsetValid = false; /**< 电气零位有效 */
 static bool Sensor_Tamagawa_DataValid = false; /**< 数据有效标志 */
 static bool Sensor_Tamagawa_RequestPending = false; /**< 请求待处理标志 */
+static float Sensor_Tamagawa_MechanicalAngularSpeedRadS = 0.0F; /**< 机械角速度 */
+static float Sensor_Tamagawa_ElectricalAngularSpeedRadS = 0.0F; /**< 电气角速度 */
+static float Sensor_Tamagawa_MotorSpeedRpm = 0.0F; /**< 电机转速 */
+static uint32_t Sensor_Tamagawa_PreviousCount = 0U; /**< 上次角度计数 */
+static bool Sensor_Tamagawa_PreviousValid = false; /**< 上次角度有效 */
 
 /**
  * @brief 计算8位CRC校验和
@@ -80,6 +85,11 @@ void Sensor_Tamagawa_Init(void)
     Sensor_Tamagawa_ElectricalOffsetValid = false;
     Sensor_Tamagawa_DataValid = false;
     Sensor_Tamagawa_RequestPending = false;
+    Sensor_Tamagawa_MechanicalAngularSpeedRadS = 0.0F;
+    Sensor_Tamagawa_ElectricalAngularSpeedRadS = 0.0F;
+    Sensor_Tamagawa_MotorSpeedRpm = 0.0F;
+    Sensor_Tamagawa_PreviousCount = 0U;
+    Sensor_Tamagawa_PreviousValid = false;
 }
 /**
  * @brief 处理角度数据
@@ -116,6 +126,63 @@ void Sensor_Tamagawa_RequestAngle(void)
     Rs485_SendFrame(&request, 1U);
 }
 /**
+ * @brief 根据角度采样周期更新速度
+ * @param sample_period_s 角度采样周期，单位为秒
+ * @param pole_pairs 电机极对数
+ */
+void Sensor_Tamagawa_SampleSpeed(float sample_period_s, uint8_t pole_pairs)
+{
+    int32_t count_delta = 0;
+    float mechanical_angle_delta_rad = 0.0F;
+
+    if ((sample_period_s > 0.0F) && (pole_pairs > 0U))
+    {
+        if (Sensor_Tamagawa_PreviousValid == true)
+        {
+            count_delta = (int32_t)Sensor_Tamagawa_RawCount -
+                          (int32_t)Sensor_Tamagawa_PreviousCount;
+
+            if (count_delta > ((int32_t)SENSOR_TAMAGAWA_RESOLUTION / 2))
+            {
+                count_delta -= (int32_t)SENSOR_TAMAGAWA_RESOLUTION;
+            }
+            else if (count_delta < -((int32_t)SENSOR_TAMAGAWA_RESOLUTION / 2))
+            {
+                count_delta += (int32_t)SENSOR_TAMAGAWA_RESOLUTION;
+            }
+            else
+            {
+            }
+
+            mechanical_angle_delta_rad =
+                ((float)count_delta * SENSOR_TAMAGAWA_TWO_PI) /
+                (float)SENSOR_TAMAGAWA_RESOLUTION;
+
+            Sensor_Tamagawa_MechanicalAngularSpeedRadS =
+                mechanical_angle_delta_rad / sample_period_s;
+            Sensor_Tamagawa_ElectricalAngularSpeedRadS =
+                Sensor_Tamagawa_MechanicalAngularSpeedRadS *
+                (float)pole_pairs;
+            Sensor_Tamagawa_MotorSpeedRpm =
+                (Sensor_Tamagawa_MechanicalAngularSpeedRadS * 60.0F) /
+                SENSOR_TAMAGAWA_TWO_PI;
+        }
+        else
+        {
+            Sensor_Tamagawa_PreviousValid = true;
+        }
+
+        Sensor_Tamagawa_PreviousCount = Sensor_Tamagawa_RawCount;
+    }
+    else
+    {
+        Sensor_Tamagawa_MechanicalAngularSpeedRadS = 0.0F;
+        Sensor_Tamagawa_ElectricalAngularSpeedRadS = 0.0F;
+        Sensor_Tamagawa_MotorSpeedRpm = 0.0F;
+        Sensor_Tamagawa_PreviousValid = false;
+    }
+}
+/**
  * @brief 获取原始计数
  * @return uint32_t 原始计数
  */
@@ -132,6 +199,30 @@ float Sensor_Tamagawa_GetMechanicalAngleRad(void)
     return ((float)Sensor_Tamagawa_RawCount *
             SENSOR_TAMAGAWA_TWO_PI) /
            (float)SENSOR_TAMAGAWA_RESOLUTION;
+}
+/**
+ * @brief 获取机械角速度
+ * @return float 机械角速度，单位rad/s
+ */
+float Sensor_Tamagawa_GetMechanicalAngularSpeedRadS(void)
+{
+    return Sensor_Tamagawa_MechanicalAngularSpeedRadS;
+}
+/**
+ * @brief 获取电气角速度
+ * @return float 电气角速度，单位rad/s
+ */
+float Sensor_Tamagawa_GetElectricalAngularSpeedRadS(void)
+{
+    return Sensor_Tamagawa_ElectricalAngularSpeedRadS;
+}
+/**
+ * @brief 获取电机转速
+ * @return float 电机转速，单位RPM，正负表示旋转方向
+ */
+float Sensor_Tamagawa_GetMotorSpeedRpm(void)
+{
+    return Sensor_Tamagawa_MotorSpeedRpm;
 }
 /**
  * @brief 获取电气角度（弧度）

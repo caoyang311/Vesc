@@ -93,6 +93,61 @@ uint8_t FocAlgorithm_GetSector(void)
 {
     return FocAlgorithm_CurrentSector;
 }
+/**
+ * @brief 应用去耦前馈。
+ *
+ * 根据当前dq电流、电角速度、电感值、磁通量、去耦模式和dq电压，
+ * 计算并应用去耦前馈电压。
+ *
+ * @param[in] current_dq 当前dq电流，指针不得为NULL。
+ * @param[in] electrical_speed_rad_s 电角速度，单位为rad/s。
+ * @param[in] ld_h 电感值，单位为H。
+ * @param[in] lq_h 电感值，单位为H。
+ * @param[in] flux_linkage_wb 磁通量，单位为Wb。
+ * @param[in] mode 去耦模式。
+ * @param[inout] voltage_dq 输出dq电压，指针不得为NULL。
+ */
+void FocAlgorithm_DecouplingFeedforward(
+    const Foc_Curr_DqType * current_dq,
+    float electrical_speed_rad_s,
+    float ld_h,
+    float lq_h,
+    float flux_linkage_wb,
+    Foc_DecouplingModeType mode,
+    Foc_Volt_DqType * voltage_dq)
+{
+    float dec_vd = 0.0F;
+    float dec_vq = 0.0F;
+    float dec_bemf = 0.0F;
+
+    if ((current_dq != NULL) && (voltage_dq != NULL))
+    {
+        if ((mode == FOC_DECOUPLING_CROSS) ||
+            (mode == FOC_DECOUPLING_CROSS_BEMF))
+        {
+            dec_vd = current_dq->Iq * electrical_speed_rad_s * lq_h;/*公式：Vd = Iq * ω * Lq */
+            dec_vq = current_dq->Id * electrical_speed_rad_s * ld_h;/*公式：Vq = Id * ω * Ld */
+        }
+        else
+        {
+        }
+
+        if ((mode == FOC_DECOUPLING_BEMF) ||
+            (mode == FOC_DECOUPLING_CROSS_BEMF))
+        {
+            dec_bemf = electrical_speed_rad_s * flux_linkage_wb;/*公式：BEMF = ω * Wb */
+        }
+        else
+        {
+        }
+
+        voltage_dq->Vd -= dec_vd;
+        voltage_dq->Vq += dec_vq + dec_bemf;
+    }
+    else
+    {
+    }
+}
 
 /**
  * @brief 按七段式空间矢量调制计算三相PWM比较值。
@@ -477,22 +532,83 @@ void FocAlgorithm_LimitVoltageCircle(Foc_Volt_DqType * voltage_dq,
     float limit_squared = 0.0F;
     float scale = 1.0F;
 
-        voltage_limit_v = dc_bus_voltage_v *
-                          FOC_ALGORITHM_ONE_OVER_SQRT_THREE;
-        magnitude_squared = (voltage_dq->Vd * voltage_dq->Vd) +
-                            (voltage_dq->Vq * voltage_dq->Vq);
-        limit_squared = voltage_limit_v * voltage_limit_v;
+    voltage_limit_v = dc_bus_voltage_v *
+                      FOC_ALGORITHM_ONE_OVER_SQRT_THREE;
+    magnitude_squared = (voltage_dq->Vd * voltage_dq->Vd) +
+                        (voltage_dq->Vq * voltage_dq->Vq);
+    limit_squared = voltage_limit_v * voltage_limit_v;
 
-        if (magnitude_squared > limit_squared)
-        {
-            scale = voltage_limit_v / sqrtf(magnitude_squared);
-            voltage_dq->Vd *= scale;
-            voltage_dq->Vq *= scale;
-        }
-        else
-        {
-            /* 电压矢量位于圆限幅范围内。 */
-        }
+    if (magnitude_squared > limit_squared)
+    {
+        scale = voltage_limit_v / sqrtf(magnitude_squared);
+        voltage_dq->Vd *= scale;
+        voltage_dq->Vq *= scale;
+    }
+    else
+    {
+    }
 }
+/**
+ * @brief 按D轴优先策略限制D/Q轴电压。
+ *
+ * @param[in,out] voltage_dq D/Q轴电压，单位V，不得为NULL。
+ * @param[in] voltage_limit_v 电压限幅，单位V，必须大于0。
+ * @param[in] max_duty 最大D轴占空比，必须在0到1之间。
+ * @param[in] overmodulation_factor 超调因子，必须大于0。
+ * @param[in] d_axis_voltage_ratio D轴电压与母线电压的比例，必须大于0。
+ *
+ * @ 输入post 限幅处理后更新D/Q轴电压，否则不修改D/Q轴电压。
+ */
+void FocAlgorithm_LimitVoltage(
+    Foc_Volt_DqType * voltage_dq,
+    float voltage_limit_v,
+    float max_duty,
+    float overmodulation_factor,
+    float d_axis_voltage_ratio,
+    Foc_VoltageLimitType * voltage_limit)
+{
+    float max_voltage_v = 0.0F;
+    float q_voltage_squared = 0.0F;
+
+
+    max_voltage_v = voltage_limit_v * max_duty * overmodulation_factor;
+    voltage_limit->MaxDVoltage = max_voltage_v * d_axis_voltage_ratio;
+    
+    if (voltage_dq->Vd > voltage_limit->MaxDVoltage)
+    {
+        voltage_dq->Vd = voltage_limit->MaxDVoltage;
+    }
+    else if (voltage_dq->Vd < -voltage_limit->MaxDVoltage)
+    {
+        voltage_dq->Vd = -voltage_limit->MaxDVoltage;
+    }
+    else
+    {
+    }
+
+    q_voltage_squared = (max_voltage_v * max_voltage_v) -
+                        (voltage_dq->Vd * voltage_dq->Vd);
+    if (q_voltage_squared > 0.0F)
+    {
+        voltage_limit->MaxQVoltage = sqrtf(q_voltage_squared);
+    }
+    else
+    {
+        voltage_limit->MaxQVoltage = 0.0F;
+    }
+
+    if (voltage_dq->Vq > voltage_limit->MaxQVoltage)
+    {
+        voltage_dq->Vq = voltage_limit->MaxQVoltage;
+    }
+    else if (voltage_dq->Vq < -voltage_limit->MaxQVoltage)
+    {
+        voltage_dq->Vq = -voltage_limit->MaxQVoltage;
+    }
+    else
+    {
+    }
+}
+
 
 

@@ -4,10 +4,12 @@
 /*----------------------------------include-----------------------------------*/
 #include <stdbool.h>
 #include <stdint.h>
+#include "FocAlgorithm.h"
+
 /*-----------------------------------macro------------------------------------*/
 /*----------------------------------typedef-----------------------------------*/
 //PID参数结构体
-typedef struct 
+typedef struct PID_Struct
 {  
   float Kp_Gain;                //kp
   float Ki_Gain;                //ki
@@ -32,7 +34,14 @@ void PID_Reset(void);
 void PID_Init_Iq(PID_Struct *PID_Iq);
 void PID_Init_Id(PID_Struct *PID_Id);
 void PID_Init_Speed(PID_Struct *PID_Speed);
-void Current_PID_Calc(float Reference, float Feedback,PID_Struct *PID_Struct,float *output);
+void Current_PID_Calc(float Reference,
+                      float Feedback,
+                      PID_Struct *PID_Struct,
+                      float sample_period_s,
+                      float *output);
+void Current_PID_LimitIntegralDq(PID_Struct *d_axis_pid,
+                                 PID_Struct *q_axis_pid,
+                                 const Foc_VoltageLimitType *voltage_limit);
 void Speed_PID_Calc(float Reference, float Feedback,PID_Struct *PID_Struct,float *output);
 /*------------------------------------test------------------------------------*/
 #endif

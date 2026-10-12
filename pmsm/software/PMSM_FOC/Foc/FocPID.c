@@ -1,4 +1,5 @@
 #include "FocPID.h"
+#include <stddef.h> 
 
 
 //力矩PID默认值
@@ -86,71 +87,121 @@ void PID_Init_Speed(PID_Struct *PID_Speed)
   PID_Speed->Lower_Limit_Integral = PID_SPEED_LOWER_LIMIT;
   PID_Speed->Upper_Limit_Integral = PID_SPEED_UPPER_LIMIT;
 }
-
-void Current_PID_Calc(float Reference, float Feedback,PID_Struct *PID_Struct,float *output)
+/**
+  * @brief  电流PID计算
+  *         
+  * @param  Reference：参考电流值
+  * @param  Feedback：反馈电流值
+  * @param  PID_Struct：电流PID参数结构体
+  * @param  sample_period_s：采样周期（秒）
+  * @param  output：原始PI输出电压指针，限幅在解耦后统一执行
+  * @retval void
+  */
+static float FocPID_LimitIntegral(float integral,
+                                  float limit)
 {
- 
-    float Error, Proportional_Term,Integral_Term;	
-    float M1_dwAux; 
-#ifdef DIFFERENTIAL_TERM_ENABLED    
-    float Differential_Term;
-#endif  
-      // 误差计算
-      Error= (float)(Reference - Feedback);
+    float limited_integral = integral;
 
-      // 计算比例项
-      Proportional_Term = (PID_Struct->Kp_Gain * Error);
+    if (limited_integral > limit)
+    {
+        limited_integral = limit;
+    }
+    else if (limited_integral < -limit)
+    {
+        limited_integral = -limit;
+    }
+    else
+    {
+    }
 
-      // 计算积分项
-      if (PID_Struct->Ki_Gain == 0.0f)
-      {
-        PID_Struct->Integral = 0.0f;
-      }
-      else
-      { 
-        Integral_Term = (PID_Struct->Ki_Gain * Error);
-        M1_dwAux = PID_Struct->Integral + Integral_Term;
-        //积分限幅
-        if (M1_dwAux > PID_Struct->Upper_Limit_Integral)
+    return limited_integral;
+}
+/**
+  * @brief  电流PID积分限幅
+  *         
+  * @param  d_axis_pid：d轴电流PID参数结构体
+  * @param  q_axis_pid：q轴电流PID参数结构体
+  * @param  voltage_limit：电压限制结构体
+  * @retval void
+  */
+void Current_PID_LimitIntegralDq(
+    PID_Struct *d_axis_pid,
+    PID_Struct *q_axis_pid,
+    const Foc_VoltageLimitType *voltage_limit)
+{
+    if ((d_axis_pid != NULL) &&
+        (q_axis_pid != NULL) &&
+        (voltage_limit != NULL) &&
+        (voltage_limit->MaxDVoltage >= 0.0F) &&
+        (voltage_limit->MaxQVoltage >= 0.0F))
+    {
+        d_axis_pid->Integral = FocPID_LimitIntegral(
+            d_axis_pid->Integral,
+            voltage_limit->MaxDVoltage);
+        q_axis_pid->Integral = FocPID_LimitIntegral(
+            q_axis_pid->Integral,
+            voltage_limit->MaxQVoltage);
+    }
+    else
+    {
+    }
+}
+/**
+  * @brief  电流PID计算
+  *         
+  * @param  Reference：参考电流值
+  * @param  Feedback：反馈电流值
+  * @param  PID_Struct：电流PID参数结构体
+  * @param  sample_period_s：采样周期（秒）
+  * @param  output：原始PI输出电压指针，限幅在解耦后统一执行
+  * @retval void
+  */
+void Current_PID_Calc(float Reference,
+                      float Feedback,
+                      PID_Struct *PID_Struct,
+                      float sample_period_s,
+                      float *output)
+{
+    float error = 0.0F;
+    float integral_candidate = 0.0F;
+
+    if ((PID_Struct != NULL) &&
+        (output != NULL) &&
+        (sample_period_s > 0.0F))
+    {
+        error = Reference - Feedback;
+        PID_Struct->Error = error;
+        integral_candidate = PID_Struct->Integral +
+                             (PID_Struct->Ki_Gain * error *
+                              sample_period_s);
+        PID_Struct->Integral = integral_candidate;
+        *output = PID_Struct->Integral +
+                  (PID_Struct->Kp_Gain * error);
+    }
+    else
+    {
+        if (output != NULL)
         {
-          PID_Struct->Integral = PID_Struct->Upper_Limit_Integral;
-        }
-        else if (M1_dwAux < PID_Struct->Lower_Limit_Integral)
-        { 
-          PID_Struct->Integral = PID_Struct->Lower_Limit_Integral;
+            *output = 0.0F;
         }
         else
         {
-          PID_Struct->Integral =M1_dwAux;
         }
-      }
-      // 计算微分项
-    #ifdef DIFFERENTIAL_TERM_ENABLED
-      {
-      float temp;
-      
-      temp = Error - PID_Struct->PreviousError;
-      Differential_Term = PID_Struct->Kd_Gain * temp;
-      PID_Struct->PreviousError = Error;    // store value 
-      }
-      *output = (Proportional_Term + PID_Struct->Integral + Differential_Term); 
-
-    #else  
-        *output = (Proportional_Term + PID_Struct->Integral); //PID输出
-    #endif
-      //PID输出限幅
-      if (*output >= PID_Struct->Upper_Limit_Output)
-      {
-        *output = PID_Struct->Upper_Limit_Output;		  			 	
-      }
-      else if (*output < PID_Struct->Lower_Limit_Output)
-      {
-       *output = PID_Struct->Lower_Limit_Output;
-      }
- 
+    }
 }
 
-void Speed_PID_Calc(float Reference, float Feedback,PID_Struct *PID_Struct,float *output)
+
+/**
+  * @brief  速度PID计算
+  *         
+  * @param  Reference：参考速度值
+  * @param  Feedback：反馈速度值
+  * @param  PID_Struct：速度PID参数结构体
+  * @param  output：输出速度值指针
+  * @retval void
+  */
+void Speed_PID_Calc(float Reference,
+                      float Feedback,PID_Struct *PID_Struct,float *output)
 {
  
     float Error, Proportional_Term,Integral_Term;	

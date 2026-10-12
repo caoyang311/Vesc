@@ -42,6 +42,20 @@ typedef struct
 
 typedef struct
 {
+    float MaxDVoltage;
+    float MaxQVoltage;
+} Foc_VoltageLimitType;
+
+typedef enum
+{
+    FOC_DECOUPLING_DISABLED = 0U,/** @brief 禁用去耦前馈 */
+    FOC_DECOUPLING_CROSS = 1U,/** @brief 交叉去耦前馈 */
+    FOC_DECOUPLING_BEMF = 2U,/** @brief BEMF去耦前馈 */
+    FOC_DECOUPLING_CROSS_BEMF = 3U/** @brief 交叉BEMF去耦前馈 */
+} Foc_DecouplingModeType;
+
+typedef struct
+{
     float sine;
     float cosine;
 } Foc_TrigType;
@@ -85,6 +99,29 @@ void FocAlgorithm_InversePark(const Foc_Volt_DqType * dq,
                               Foc_Volt_AlphaBetaType * alpha_beta);
 
 /**
+ * @brief 应用去耦前馈。
+ *
+ * 根据当前dq电流、电角速度、电感值、磁通量、去耦模式和dq电压，
+ * 计算并应用去耦前馈电压。
+ *
+ * @param[in] current_dq 当前dq电流，指针不得为NULL。
+ * @param[in] electrical_speed_rad_s 电角速度，单位为rad/s。
+ * @param[in] ld_h 电感值，单位为H。
+ * @param[in] lq_h 电感值，单位为H。
+ * @param[in] flux_linkage_wb 磁通量，单位为Wb。
+ * @param[in] mode 去耦模式。
+ * @param[inout] voltage_dq 输出dq电压，指针不得为NULL。
+ */
+void FocAlgorithm_DecouplingFeedforward(
+    const Foc_Curr_DqType * current_dq,
+    float electrical_speed_rad_s,
+    float ld_h,
+    float lq_h,
+    float flux_linkage_wb,
+    Foc_DecouplingModeType mode,
+    Foc_Volt_DqType * voltage_dq);
+
+/**
  * @brief 按母线电压对D/Q轴电压执行圆限幅。
  *
  * 当电压矢量幅值超过母线电压除以根号3时，保持矢量方向并按比例缩小。
@@ -96,6 +133,26 @@ void FocAlgorithm_InversePark(const Foc_Volt_DqType * dq,
  */
 void FocAlgorithm_LimitVoltageCircle(Foc_Volt_DqType * voltage_dq,
                                      float dc_bus_voltage_v);
+
+/**
+ * @brief 按D轴优先策略限制D/Q轴电压。
+ *
+ * @param[in,out] voltage_dq D/Q轴最终电压，单位V，不得为NULL。
+ * @param[in] dc_bus_voltage_v 母线电压，单位V，必须大于0。
+ * @param[in] max_duty 最大调制占空比。
+ * @param[in] overmodulation_factor 过调制系数。
+ * @param[in] d_axis_voltage_ratio D轴电压分配比例。
+ * @return 参数有效时返回true，否则返回false。
+ */
+void FocAlgorithm_LimitVoltage(
+    Foc_Volt_DqType * voltage_dq,
+    float dc_bus_voltage_v,
+    float max_duty,
+    float overmodulation_factor,
+    float d_axis_voltage_ratio,
+    Foc_VoltageLimitType * voltage_limit);
+
+
 
 /**
  * @brief 根据电角频率生成电角度相位。

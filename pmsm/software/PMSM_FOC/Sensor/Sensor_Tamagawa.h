@@ -13,8 +13,12 @@
 void Sensor_Tamagawa_Init(void);
 void Sensor_Tamagawa_ProcessAngle(void);
 void Sensor_Tamagawa_RequestAngle(void);
+void Sensor_Tamagawa_SampleSpeed(float sample_period_s, uint8_t pole_pairs);
 uint32_t Sensor_Tamagawa_GetRawCount(void);
 float Sensor_Tamagawa_GetMechanicalAngleRad(void);
+float Sensor_Tamagawa_GetMechanicalAngularSpeedRadS(void);
+float Sensor_Tamagawa_GetElectricalAngularSpeedRadS(void);
+float Sensor_Tamagawa_GetMotorSpeedRpm(void);
 float Sensor_Tamagawa_GetElectricalAngleRad(uint8_t pole_pairs);
 uint16_t Sensor_Tamagawa_GetElectricalPhase(uint8_t pole_pairs);
 uint16_t Sensor_Tamagawa_GetElectricalPhaseWithOffset(uint8_t pole_pairs);
