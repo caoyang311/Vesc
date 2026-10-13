@@ -2,6 +2,7 @@
 
 #include "FocAlgorithm.h"
 #include "FocCurrent.h"
+#include "FocFilter.h"
 #include "FocPID.h"
 #include "FocTrigTable.h"
 #include "Motor.h"
@@ -16,6 +17,8 @@
 #define MOTOR_IF_LD                         (0.00028F)    /**< D轴电感 单位：H */
 #define MOTOR_IF_LQ                         (0.00028F)    /**< Q轴电感 单位：H */
 #define MOTOR_IF_FLUX                       (0.011F)    /**< 磁链 单位：Wb */
+#define MOTOR_IF_POWER_FILTER_ALPHA         (0.00626F)    /**< 功率滤波系数 */
+#define MOTOR_IF_MIN_INPUT_POWER_W          (1.0F)        /**< 最小有效输入功率 */
 
 
 #define MOTOR_IF_PREPOSITION_TIME_S         (0.5F)    /**< 预定位时间 */
@@ -91,10 +94,15 @@ typedef struct
     float ElectricalSpeed; /**< 电气速度 */
     float IdReferenceA; /**< 当前D轴参考电流 */
     float IqReferenceA; /**< 当前Q轴参考电流 */
+    float InputPowerW; /**< 电机输入功率，单位为瓦特 */
+    float OutputPowerW; /**< 电机输出功率，单位为瓦特 */
+    float EfficiencyPercent; /**< 电机效率，单位为百分比 */
     bool SensorZeroCalibrated; /**< 传感器零偏校准状态 */
 } Motor_IFStateType;
 
 static Motor_IFStateType Motor_IF_State = {0};
+static LPF_Filter Motor_IF_InputPowerFilter = {0};
+static LPF_Filter Motor_IF_OutputPowerFilter = {0};
 /**
  * @brief 电流斜坡。
  * @param current_reference_a 当前参考。
@@ -332,6 +340,68 @@ static void Motor_IF_RunCurrentLoop(void)
     Motor_IF_FocRun();
 }
 /**
+ * @brief 计算电机输入功率。
+ * @return float 电机功率，单位为瓦特
+ */
+static float Motor_IF_CalculateInputPowerW(void)
+{
+    float motor_electrical_power_w = 0.0F;
+
+    motor_electrical_power_w = 1.5F *
+        ((Motor_IF_State.VoltageDq.Vd * Motor_IF_State.CurrentDq.Id) +
+         (Motor_IF_State.VoltageDq.Vq * Motor_IF_State.CurrentDq.Iq));
+
+    return FocLpf_Update(&Motor_IF_InputPowerFilter,
+                         motor_electrical_power_w);
+}
+
+static float Motor_IF_CalculateOutputPowerW(void)
+{
+    float electromagnetic_torque_nm = 0.0F;
+    float mechanical_speed_rad_s = 0.0F;
+    float motor_output_power_w = 0.0F;
+
+    electromagnetic_torque_nm = 1.5F * (float)MOTOR_IF_POLE_PAIRS *
+        ((MOTOR_IF_FLUX * Motor_IF_State.CurrentDq.Iq) +
+         ((MOTOR_IF_LD - MOTOR_IF_LQ) *
+          Motor_IF_State.CurrentDq.Id * Motor_IF_State.CurrentDq.Iq));
+    mechanical_speed_rad_s = Motor_IF_State.ElectricalSpeed /
+                             (float)MOTOR_IF_POLE_PAIRS;
+    motor_output_power_w = electromagnetic_torque_nm *
+                           mechanical_speed_rad_s;
+
+    return FocLpf_Update(&Motor_IF_OutputPowerFilter,
+                         motor_output_power_w);
+}
+/**
+ * @brief 计算电机效率百分比。
+ * @return float 电机效率百分比，单位为百分比
+ */
+static float Motor_IF_CalculateEfficiencyPercent(void)
+{
+    float efficiency_percent = 0.0F;
+
+    if ((Motor_IF_State.InputPowerW > MOTOR_IF_MIN_INPUT_POWER_W) &&
+        (Motor_IF_State.OutputPowerW > 0.0F))
+    {
+        efficiency_percent =
+            (Motor_IF_State.OutputPowerW / Motor_IF_State.InputPowerW) *
+            100.0F;
+        if (efficiency_percent > 100.0F)
+        {
+            efficiency_percent = 100.0F;
+        }
+        else
+        {
+        }
+    }
+    else
+    {
+    }
+
+    return efficiency_percent;
+}
+/**
  * @brief 初始化IF。
  */
 void Motor_IF_Init(void)
@@ -339,6 +409,10 @@ void Motor_IF_Init(void)
     PID_init();
     Motor_IF_ResetState();
     FocCurrent_Init();
+    FocLpf_Init(&Motor_IF_InputPowerFilter,
+                MOTOR_IF_POWER_FILTER_ALPHA);
+    FocLpf_Init(&Motor_IF_OutputPowerFilter,
+                MOTOR_IF_POWER_FILTER_ALPHA);
 }
 /**
  * @brief 设置角度源。
@@ -423,10 +497,14 @@ void Motor_IF_ControlFunction(void)
 
             case MOTOR_IF_STATE_CLOSED_LOOP:
                 Motor_IF_RunCurrentLoop();
+                Motor_IF_State.InputPowerW = Motor_IF_CalculateInputPowerW();
+                Motor_IF_State.OutputPowerW = Motor_IF_CalculateOutputPowerW();
+                Motor_IF_State.EfficiencyPercent =
+                    Motor_IF_CalculateEfficiencyPercent();
                 break;
 
             default:
-                Motor_IF_ResetState();
+                Motor_IF_ResetState(); 
                 break;
         }
     }
@@ -434,11 +512,16 @@ void Motor_IF_ControlFunction(void)
 /**
  * @brief 主函数。
  */
+
 void Motor_IF_MainFunction(void)
 {
     if (Motor_GetIsRunning() == false)
     {
         Motor_IF_ResetState();
         FocCurrent_CalibrateBiasVoltage();
+    }
+    else
+    {
+        
     }
 }

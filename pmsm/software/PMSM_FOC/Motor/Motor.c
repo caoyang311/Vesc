@@ -32,7 +32,7 @@ void Motor_Init(void)
     Motor_Speed_Init();
     Motor_Position_Init();
     Motor_Identification_Init();
-    FocLpf_Init(&Motor_DcBusVoltageFilter, 0.2f);
+    FocLpf_Init(&Motor_DcBusVoltageFilter, 0.00626F);
     Motor_CurrentMode = MOTOR_MODE_IF;
     Motor_IsRunning = false;
     Motor_DcBusVoltageV = 0.0F;
