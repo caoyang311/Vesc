@@ -7,6 +7,7 @@ static uint8_t s_txBuf[RS485_TX_BUFFER_SIZE];
 static volatile uint16_t s_rxLen;
 static volatile uint8_t s_rxReady;
 static volatile uint8_t s_txBusy;
+static volatile uint32_t FrameLossCount;
 /**
  * @brief 设置为发送模式
  */
@@ -63,7 +64,7 @@ void Rs485_Init(void)
 rs485_status_t Rs485_SendFrame(const uint8_t *data, uint16_t len)
 {
     HAL_StatusTypeDef result;
-
+    FrameLossCount++;
     if ((data == (const uint8_t *)0) ||
         (len == 0U) ||
         (len > RS485_TX_BUFFER_SIZE) ||
@@ -75,8 +76,8 @@ rs485_status_t Rs485_SendFrame(const uint8_t *data, uint16_t len)
     (void)memcpy(s_txBuf, data, len);
     s_txBusy = 1U;
     Rs485_SetTxMode();
-    (void)HAL_UART_DMAStop(rs485Huart);
-    result = HAL_UART_Transmit_IT(rs485Huart, s_txBuf, len);
+    (void)HAL_UART_AbortReceive(rs485Huart);
+    result = HAL_UART_Transmit_DMA(rs485Huart, s_txBuf, len);
 
     if (result != HAL_OK)
     {
@@ -141,6 +142,10 @@ void Rs485_RxEventHandler(uint16_t size)
     {
         s_rxLen = size;
         s_rxReady = 1U;
+        if (FrameLossCount > 0U)
+        {
+            FrameLossCount--;
+        }
     }
 }
 /**

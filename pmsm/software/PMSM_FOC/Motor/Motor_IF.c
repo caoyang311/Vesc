@@ -95,7 +95,13 @@ typedef struct
 } Motor_IFStateType;
 
 static Motor_IFStateType Motor_IF_State = {0};
-
+/**
+ * @brief 电流斜坡。
+ * @param current_reference_a 当前参考。
+ * @param target_reference_a 目标参考。
+ * @param step_a 斜坡步长。
+ * @return float 下一个参考。
+ */
 static float Motor_IF_RampReference(float current_reference_a,
                                     float target_reference_a,
                                     float step_a)
@@ -131,7 +137,6 @@ static float Motor_IF_RampReference(float current_reference_a,
     return next_reference_a;
 }
 
-static void Motor_IF_RunCurrentLoop(void);
 
 /**
  * @brief 重置IF状态。
@@ -145,75 +150,9 @@ static void Motor_IF_ResetState(void)
     PID_Reset();
 }
 /**
- * @brief 运行预定位。
+ * @brief 运行FOC。
  */
-static void Motor_IF_RunPreposition(void)
-{
-    uint16_t sensor_phase = 0U;
-
-    Motor_IF_State.ElectricalAngle = 0U;
-    Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
-        Motor_IF_State.IdReferenceA,
-        MOTOR_IF_PREPOSITION_ID_REFERENCE_A,
-        MOTOR_IF_PREPOSITION_CURRENT_STEP_A);
-    Motor_IF_State.IqReferenceA = Motor_IF_RampReference(
-        Motor_IF_State.IqReferenceA,
-        0.0F,
-        MOTOR_IF_PREPOSITION_CURRENT_STEP_A);
-    // Motor_IF_State.IdReferenceA = 1.0F;
-    // Motor_IF_State.IqReferenceA = 0.0F;
-    Motor_IF_RunCurrentLoop();
-
-    if ((Motor_IF_State.AngleSource == MOTOR_IF_ANGLE_SOURCE_SENSOR) &&
-        (Motor_IF_State.PrepositionTick >= MOTOR_IF_PREPOSITION_TICK_COUNT) &&
-        (Sensor_Tamagawa_IsDataValid() == true))
-    {
-        sensor_phase = Sensor_Tamagawa_GetElectricalPhase(MOTOR_IF_POLE_PAIRS);/*获取当前电气相位*/
-        Sensor_Tamagawa_SetElectricalPhaseOffset(sensor_phase);/*设置电气相位偏移量*/
-        Motor_IF_State.SensorZeroCalibrated = true;
-    }
-    else
-    {
-    }
-}
-/**
- * @brief 运行强拖。
- */
-static void Motor_IF_RunForceDrag(void)
-{
-    if ((Motor_IF_State.AngleSource == MOTOR_IF_ANGLE_SOURCE_MANUAL) &&
-        (Motor_IF_State.ElectricalFrequencyHz < MOTOR_IF_TARGET_FREQUENCY_HZ))
-    {
-        Motor_IF_State.ElectricalFrequencyHz += MOTOR_IF_FREQUENCY_STEP_HZ;
-        if (Motor_IF_State.ElectricalFrequencyHz > MOTOR_IF_TARGET_FREQUENCY_HZ)
-        {
-            Motor_IF_State.ElectricalFrequencyHz = MOTOR_IF_TARGET_FREQUENCY_HZ;
-        }
-        else
-        {
-        }
-    }
-    else
-    {
-        Motor_IF_State.ElectricalFrequencyHz = MOTOR_IF_TARGET_FREQUENCY_HZ;
-    }
-
-    FocAlgorithm_GenerateAngle(Motor_IF_State.ElectricalFrequencyHz,
-                               &Motor_IF_State.ElectricalAngle);
-    Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
-        Motor_IF_State.IdReferenceA,
-        0.0F,
-        MOTOR_IF_FORCE_DRAG_CURRENT_STEP_A);
-    Motor_IF_State.IqReferenceA = Motor_IF_RampReference(
-        Motor_IF_State.IqReferenceA,
-        MOTOR_IF_FORCE_DRAG_IQ_REFERENCE_A,
-        MOTOR_IF_FORCE_DRAG_CURRENT_STEP_A);
-    Motor_IF_RunCurrentLoop();
-}
-/**
- * @brief 运行闭环。
- */
-static void Motor_IF_RunCurrentLoop(void)
+static void Motor_IF_FocRun(void)
 {
     float dc_bus_voltage_v = 0.0F;
     float debug[3] = {0.0F};
@@ -223,6 +162,7 @@ static void Motor_IF_RunCurrentLoop(void)
     /*转换为AlphaBeta坐标系*/
     FocAlgorithm_Clarke(&Motor_IF_State.Current,
                         &Motor_IF_State.CurrentAlphaBeta);
+    /*Park变换*/                    
     FocTrig_GetSinCos(Motor_IF_State.ElectricalAngle,
                         &Motor_IF_State.Trig);
     FocAlgorithm_Park(&Motor_IF_State.CurrentAlphaBeta,
@@ -307,6 +247,89 @@ static void Motor_IF_RunCurrentLoop(void)
     // debug[1] = Motor_IF_State.PwmCompare.compare_v;
     // debug[2] = Motor_IF_State.PwmCompare.compare_w;    
     Com_Uart_SendJustFloat(debug, 3);
+}
+/**
+ * @brief 运行预定位。
+ */
+static void Motor_IF_RunPreposition(void)
+{
+    uint16_t sensor_phase = 0U;
+
+    Motor_IF_State.ElectricalAngle = 0U;
+    Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
+        Motor_IF_State.IdReferenceA,
+        MOTOR_IF_PREPOSITION_ID_REFERENCE_A,
+        MOTOR_IF_PREPOSITION_CURRENT_STEP_A);
+    Motor_IF_State.IqReferenceA = Motor_IF_RampReference(
+        Motor_IF_State.IqReferenceA,
+        0.0F,
+        MOTOR_IF_PREPOSITION_CURRENT_STEP_A);
+    // Motor_IF_State.IdReferenceA = 1.0F;
+    // Motor_IF_State.IqReferenceA = 0.0F;
+    Motor_IF_FocRun();
+
+    if ((Motor_IF_State.AngleSource == MOTOR_IF_ANGLE_SOURCE_SENSOR) &&
+        (Motor_IF_State.PrepositionTick >= MOTOR_IF_PREPOSITION_TICK_COUNT) &&
+        (Sensor_Tamagawa_IsDataValid() == true))
+    {
+        sensor_phase = Sensor_Tamagawa_GetElectricalPhase(MOTOR_IF_POLE_PAIRS);/*获取当前电气相位*/
+        Sensor_Tamagawa_SetElectricalPhaseOffset(sensor_phase);/*设置电气相位偏移量*/
+        Motor_IF_State.SensorZeroCalibrated = true;
+    }
+    else
+    {
+    }
+}
+/**
+ * @brief 运行强拖。
+ */
+static void Motor_IF_RunForceDrag(void)
+{
+    if ((Motor_IF_State.AngleSource == MOTOR_IF_ANGLE_SOURCE_MANUAL) &&
+        (Motor_IF_State.ElectricalFrequencyHz < MOTOR_IF_TARGET_FREQUENCY_HZ))
+    {
+        Motor_IF_State.ElectricalFrequencyHz += MOTOR_IF_FREQUENCY_STEP_HZ;
+        if (Motor_IF_State.ElectricalFrequencyHz > MOTOR_IF_TARGET_FREQUENCY_HZ)
+        {
+            Motor_IF_State.ElectricalFrequencyHz = MOTOR_IF_TARGET_FREQUENCY_HZ;
+        }
+        else
+        {
+        }
+    }
+    else
+    {
+        Motor_IF_State.ElectricalFrequencyHz = MOTOR_IF_TARGET_FREQUENCY_HZ;
+    }
+
+    FocAlgorithm_GenerateAngle(Motor_IF_State.ElectricalFrequencyHz,
+                               &Motor_IF_State.ElectricalAngle);
+    Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
+        Motor_IF_State.IdReferenceA,
+        0.0F,
+        MOTOR_IF_FORCE_DRAG_CURRENT_STEP_A);
+    Motor_IF_State.IqReferenceA = Motor_IF_RampReference(
+        Motor_IF_State.IqReferenceA,
+        MOTOR_IF_FORCE_DRAG_IQ_REFERENCE_A,
+        MOTOR_IF_FORCE_DRAG_CURRENT_STEP_A);
+    Motor_IF_FocRun();
+}
+/**
+ * @brief 运行闭环。
+ */
+static void Motor_IF_RunCurrentLoop(void)
+{
+    Motor_IF_State.ElectricalAngle =
+        Sensor_Tamagawa_GetElectricalPhaseWithOffset(MOTOR_IF_POLE_PAIRS);/*获取当前电气相位并应用偏移量*/
+    Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
+        Motor_IF_State.IdReferenceA,
+        MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A,
+        MOTOR_IF_CLOSED_LOOP_CURRENT_STEP_A);
+    Motor_IF_State.IqReferenceA = Motor_IF_RampReference(
+        Motor_IF_State.IqReferenceA,
+        MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A,
+        MOTOR_IF_CLOSED_LOOP_CURRENT_STEP_A);
+    Motor_IF_FocRun();
 }
 /**
  * @brief 初始化IF。
@@ -399,16 +422,6 @@ void Motor_IF_ControlFunction(void)
                 break;
 
             case MOTOR_IF_STATE_CLOSED_LOOP:
-                Motor_IF_State.ElectricalAngle =
-                    Sensor_Tamagawa_GetElectricalPhaseWithOffset(MOTOR_IF_POLE_PAIRS);/*获取当前电气相位并应用偏移量*/
-                Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
-                    Motor_IF_State.IdReferenceA,
-                    MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A,
-                    MOTOR_IF_CLOSED_LOOP_CURRENT_STEP_A);
-                Motor_IF_State.IqReferenceA = Motor_IF_RampReference(
-                    Motor_IF_State.IqReferenceA,
-                    MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A,
-                    MOTOR_IF_CLOSED_LOOP_CURRENT_STEP_A);
                 Motor_IF_RunCurrentLoop();
                 break;
 
