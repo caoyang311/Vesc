@@ -5,7 +5,7 @@
 #include "SystemTime.h"
 
 #include "tim.h"
-
+#include "Sensor_Tamagawa.h"
 /* 系统时间计数器，单位为毫秒。 */
 static volatile uint32_t SystemTime_TickMs = 0U;
 /**
@@ -47,6 +47,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *TimHandle)
       (TimHandle->Instance == TIM6))
   {
     SystemTime_Notification1ms();
+    Sensor_Tamagawa_RequestAngle();/*请求角度*/
+    Sensor_Tamagawa_ProcessAngle();/*处理角度*/
   }
   else
   {

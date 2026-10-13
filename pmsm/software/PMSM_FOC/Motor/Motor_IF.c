@@ -22,7 +22,7 @@
 
 
 #define MOTOR_IF_PREPOSITION_TIME_S         (0.5F)    /**< 预定位时间 */
-#define MOTOR_IF_PREPOSITION_ID_REFERENCE_A (2.0F)    /**< 预定位D轴参考电流 */
+#define MOTOR_IF_PREPOSITION_ID_REFERENCE_A (3.0F)    /**< 预定位D轴参考电流 */
 #define MOTOR_IF_PREPOSITION_CURRENT_RAMP_TIME_S (0.2F) /**< 预定位电流斜坡时间 */
 
 #define MOTOR_IF_TARGET_FREQUENCY_HZ        (10.0F)   /**< 强拖目标电频率 */
@@ -31,7 +31,7 @@
 #define MOTOR_IF_FORCE_DRAG_CURRENT_RAMP_TIME_S (0.2F)  /**< 强拖电流斜坡时间 */
 
 #define MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A (0.0F)    /**< 闭环D轴参考电流 */
-#define MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A (1.5F)    /**< 闭环Q轴参考电流 */
+#define MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A (1.0F)    /**< 闭环Q轴参考电流 */
 #define MOTOR_IF_CLOSED_LOOP_CURRENT_RAMP_TIME_S (0.2F) /**< 闭环电流斜坡时间 */
 /**
  * @brief 预定位计数。
@@ -210,7 +210,7 @@ static void Motor_IF_FocRun(void)
         MOTOR_IF_LD,
         MOTOR_IF_LQ,
         MOTOR_IF_FLUX,
-        FOC_DECOUPLING_CROSS,
+        FOC_DECOUPLING_DISABLED,
         &Motor_IF_State.VoltageDq);
 
     (void)FocAlgorithm_LimitVoltage(
@@ -245,12 +245,12 @@ static void Motor_IF_FocRun(void)
     Pwm_Set_UVW_CCR(Motor_IF_State.PwmCompare.compare_u,
                     Motor_IF_State.PwmCompare.compare_v,
                     Motor_IF_State.PwmCompare.compare_w);
-    debug[0] = Motor_IF_State.Current.phase_u;
-    debug[1] = Motor_IF_State.Current.phase_v;
-    debug[2] = Motor_IF_State.Current.phase_w;
-    // debug[2] = Motor_IF_State.CurrentDq.Iq;
-    // debug[1] = Motor_IF_State.CurrentDq.Id;
-    // debug[0] = Motor_IF_State.IdReferenceA;
+    // debug[0] = Motor_IF_State.Current.phase_u;
+    // debug[1] = Motor_IF_State.Current.phase_v;
+    // debug[2] = Motor_IF_State.Current.phase_w;
+    debug[1] = Motor_IF_State.CurrentDq.Iq;
+    debug[2] = Motor_IF_State.CurrentDq.Id;
+    debug[0] = Motor_IF_State.ElectricalSpeed;
     // debug[0] = Motor_IF_State.PwmCompare.compare_u;
     // debug[1] = Motor_IF_State.PwmCompare.compare_v;
     // debug[2] = Motor_IF_State.PwmCompare.compare_w;    
@@ -329,14 +329,16 @@ static void Motor_IF_RunCurrentLoop(void)
 {
     Motor_IF_State.ElectricalAngle =
         Sensor_Tamagawa_GetElectricalPhaseWithOffset(MOTOR_IF_POLE_PAIRS);/*获取当前电气相位并应用偏移量*/
-    Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
-        Motor_IF_State.IdReferenceA,
-        MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A,
-        MOTOR_IF_CLOSED_LOOP_CURRENT_STEP_A);
-    Motor_IF_State.IqReferenceA = Motor_IF_RampReference(
-        Motor_IF_State.IqReferenceA,
-        MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A,
-        MOTOR_IF_CLOSED_LOOP_CURRENT_STEP_A);
+    // Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
+    //     Motor_IF_State.IdReferenceA,
+    //     MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A,
+    //     MOTOR_IF_CLOSED_LOOP_CURRENT_STEP_A);
+    // Motor_IF_State.IqReferenceA = Motor_IF_RampReference(
+    //     Motor_IF_State.IqReferenceA,
+    //     MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A,
+    //     MOTOR_IF_CLOSED_LOOP_CURRENT_STEP_A);
+    Motor_IF_State.IdReferenceA = 0;
+    Motor_IF_State.IqReferenceA = 1.0F;
     Motor_IF_FocRun();
 }
 /**

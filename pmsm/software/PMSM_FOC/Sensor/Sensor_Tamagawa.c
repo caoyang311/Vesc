@@ -99,7 +99,7 @@ void Sensor_Tamagawa_ProcessAngle(void)
     uint8_t response[SENSOR_TAMAGAWA_RESPONSE_LENGTH];
     uint16_t response_length = 0U;
 
-    //if (Rs485_FrameAvailable() != 0U)
+    if (Rs485_FrameAvailable() != 0U)
     {
         if (Rs485_GetFrame(response, &response_length) == RS485_OK)
         {
@@ -108,7 +108,7 @@ void Sensor_Tamagawa_ProcessAngle(void)
                 response_length);
         }
 
-        //Sensor_Tamagawa_RequestPending = false;
+        Sensor_Tamagawa_RequestPending = false;
     }
 }
 /**
@@ -118,12 +118,12 @@ void Sensor_Tamagawa_RequestAngle(void)
 {
     static const uint8_t request = SENSOR_TAMAGAWA_READ_COMMAND;
 
-    // if ((Sensor_Tamagawa_RequestPending == false) &&
-    //     (Rs485_SendFrame(&request, 1U) == RS485_OK))
-    // {
-    //     Sensor_Tamagawa_RequestPending = true;
-    // }
-    Rs485_SendFrame(&request, 1U);
+    if ((Sensor_Tamagawa_RequestPending == false) &&
+        (Rs485_SendFrame(&request, 1U) == RS485_OK))
+    {
+        Sensor_Tamagawa_RequestPending = true;
+    }
+//    Rs485_SendFrame(&request, 1U);
 }
 /**
  * @brief 根据角度采样周期更新速度

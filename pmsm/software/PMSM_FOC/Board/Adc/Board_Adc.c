@@ -390,7 +390,7 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
 
     if (hadc == &hadc2)
     {
-        Sensor_Tamagawa_ProcessAngle();/*处理角度*/
+        //Sensor_Tamagawa_ProcessAngle();/*处理角度*/
 
         if (Motor_GetMode() == MOTOR_MODE_VF)
         {
@@ -404,7 +404,7 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
         {
         }
 
-        Sensor_Tamagawa_RequestAngle();/*请求角度*/
+        //Sensor_Tamagawa_RequestAngle();/*请求角度*/
     }
     Dio_WriteChannel(DIO_CHANNEL_TEST, STD_LOW);
 }
