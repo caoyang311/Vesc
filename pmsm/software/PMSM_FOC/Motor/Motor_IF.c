@@ -13,6 +13,7 @@
 #define MOTOR_IF_POLE_PAIRS                 (5U)      /**< 电机极对数 */
 #define MOTOR_IF_CONTROL_FREQUENCY_HZ      (10000.0F) /**< 控制频率 */
 #define MOTOR_IF_CONTROL_PERIOD_S          (1.0F / MOTOR_IF_CONTROL_FREQUENCY_HZ) /**< 控制周期 */
+#define MOTOR_IF_SENSOR_ANGLE_COMPENSATION_S (0.0001F) /**< 角度补偿时间 */
 #define MOTOR_IF_TWO_PI                    (6.2831853072F) /**< 2π */
 #define MOTOR_IF_LD                         (0.00028F)    /**< D轴电感 单位：H */
 #define MOTOR_IF_LQ                         (0.00028F)    /**< Q轴电感 单位：H */
@@ -91,7 +92,9 @@ typedef struct
     uint16_t ElectricalAngle; /**< 电气相位 */
     uint32_t PrepositionTick; /**< 预定位计数 */
     float ElectricalFrequencyHz; /**< 电气频率 */
-    float ElectricalSpeed; /**< 电气速度 */
+    float ElectricalSpeed; /**< FOC使用的电气速度 */
+    float DifferentialElectricalSpeed; /**< 差分滤波电气速度 */
+    float PllElectricalSpeed; /**< PLL电气速度 */
     float IdReferenceA; /**< 当前D轴参考电流 */
     float IqReferenceA; /**< 当前Q轴参考电流 */
     float InputPowerW; /**< 电机输入功率，单位为瓦特 */
@@ -163,7 +166,6 @@ static void Motor_IF_ResetState(void)
 static void Motor_IF_FocRun(void)
 {
     float dc_bus_voltage_v = 0.0F;
-    float debug[3] = {0.0F};
     float voltage_limit_v = 0.0F;
     /*采样电流*/
     FocCurrent_SamplePhaseCurrent(&Motor_IF_State.Current);
@@ -179,10 +181,17 @@ static void Motor_IF_FocRun(void)
     /*电角速度计算*/
     if (Motor_IF_State.AngleSource == MOTOR_IF_ANGLE_SOURCE_SENSOR)
     {
-        Sensor_Tamagawa_SampleSpeed(MOTOR_IF_CONTROL_PERIOD_S,
-                                    MOTOR_IF_POLE_PAIRS);
-        Motor_IF_State.ElectricalSpeed =
+        Sensor_Tamagawa_SampleSpeed(
+            SENSOR_TAMAGAWA_UPDATE_PERIOD_S,
+            MOTOR_IF_POLE_PAIRS);
+            Sensor_Tamagawa_UpdatePll(MOTOR_IF_CONTROL_PERIOD_S,
+                                   MOTOR_IF_POLE_PAIRS);
+        Motor_IF_State.DifferentialElectricalSpeed =
             Sensor_Tamagawa_GetElectricalAngularSpeedRadS();
+        Motor_IF_State.PllElectricalSpeed =
+            Sensor_Tamagawa_GetPllElectricalAngularSpeedRadS();
+        Motor_IF_State.ElectricalSpeed =
+            Motor_IF_State.PllElectricalSpeed;
     }
     else
     {
@@ -248,9 +257,9 @@ static void Motor_IF_FocRun(void)
     // debug[0] = Motor_IF_State.Current.phase_u;
     // debug[1] = Motor_IF_State.Current.phase_v;
     // debug[2] = Motor_IF_State.Current.phase_w;
-    debug[1] = Motor_IF_State.CurrentDq.Iq;
-    debug[2] = Motor_IF_State.CurrentDq.Id;
-    debug[0] = Motor_IF_State.ElectricalSpeed;
+    debug[0] = Motor_IF_State.DifferentialElectricalSpeed;
+    debug[1] = Motor_IF_State.PllElectricalSpeed;
+    debug[2] = Motor_IF_State.ElectricalSpeed;
     // debug[0] = Motor_IF_State.PwmCompare.compare_u;
     // debug[1] = Motor_IF_State.PwmCompare.compare_v;
     // debug[2] = Motor_IF_State.PwmCompare.compare_w;    
@@ -277,8 +286,7 @@ static void Motor_IF_RunPreposition(void)
     Motor_IF_FocRun();
 
     if ((Motor_IF_State.AngleSource == MOTOR_IF_ANGLE_SOURCE_SENSOR) &&
-        (Motor_IF_State.PrepositionTick >= MOTOR_IF_PREPOSITION_TICK_COUNT) &&
-        (Sensor_Tamagawa_IsDataValid() == true))
+        (Motor_IF_State.PrepositionTick >= MOTOR_IF_PREPOSITION_TICK_COUNT))
     {
         sensor_phase = Sensor_Tamagawa_GetElectricalPhase(MOTOR_IF_POLE_PAIRS);/*获取当前电气相位*/
         Sensor_Tamagawa_SetElectricalPhaseOffset(sensor_phase);/*设置电气相位偏移量*/
@@ -328,7 +336,8 @@ static void Motor_IF_RunForceDrag(void)
 static void Motor_IF_RunCurrentLoop(void)
 {
     Motor_IF_State.ElectricalAngle =
-        Sensor_Tamagawa_GetElectricalPhaseWithOffset(MOTOR_IF_POLE_PAIRS);/*获取当前电气相位并应用偏移量*/
+        Sensor_Tamagawa_GetPllElectricalPhaseWithOffsetAndLead(
+            MOTOR_IF_SENSOR_ANGLE_COMPENSATION_S);
     // Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
     //     Motor_IF_State.IdReferenceA,
     //     MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A,

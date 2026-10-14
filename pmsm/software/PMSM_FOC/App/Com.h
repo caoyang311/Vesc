@@ -17,6 +17,7 @@ extern "C" {
 /* ============ 调试开关 ============ */
 #define APP_ENABLE_JUSTFLOAT    1   /* 1: 调试阶段开启，0: 发布时关闭 */
 
+extern float debug[3];  /**< 调试数据 */
 
 void Com_Uart_Init(UART_HandleTypeDef *huart);
 void Com_RX_MainFunction(void);                /* 主循环调用 */

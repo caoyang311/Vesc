@@ -1,6 +1,9 @@
 #include "FocCurrent.h"
 #include "Board_Adc.h"
+#include "FocFilter.h"
 #include <stddef.h>
+
+#define FOC_CURRENT_FILTER_ALPHA             (0.2F) /**< 相电流滤波系数 */
 #define FOC_CURRENT_ADC_REFERENCE_VOLTAGE_V (3.3F)  /**< ADC参考电压，单位：V */
 #define FOC_CURRENT_ADC_MAX_COUNT           (4095.0F) /**< ADC最大计数 */
 #define FOC_CURRENT_SHUNT_RESISTANCE_OHM    (0.020F) /**< 电流采样电阻，单位：Ω */
@@ -9,6 +12,9 @@
 
 static Foc_PhaseCurrentType FocCurrent_Current = {0};
 static Foc_PhCurrentBiasValueType FocCurrent_BiasValue = {0};
+static LPF_Filter FocCurrent_PhaseUFilter = {0};
+static LPF_Filter FocCurrent_PhaseVFilter = {0};
+static LPF_Filter FocCurrent_PhaseWFilter = {0};
 static Foc_PhCurrentBiasVoltageType FocCurrent_BiasVoltage = {0};   
 /**
  * @brief 将ADC值转换为电流值，单位为A。
@@ -38,6 +44,9 @@ void FocCurrent_Init(void)
 {
     FocCurrent_Current = (Foc_PhaseCurrentType){0};
     FocCurrent_BiasValue = (Foc_PhCurrentBiasValueType){0};
+    FocLpf_Init(&FocCurrent_PhaseUFilter, FOC_CURRENT_FILTER_ALPHA);
+    FocLpf_Init(&FocCurrent_PhaseVFilter, FOC_CURRENT_FILTER_ALPHA);
+    FocLpf_Init(&FocCurrent_PhaseWFilter, FOC_CURRENT_FILTER_ALPHA);
 }
 /**
  * @brief 采样零电流偏置电压并更新偏置。
@@ -112,6 +121,12 @@ void FocCurrent_SamplePhaseCurrent(Foc_PhaseCurrentType * phase_current)
             result.phase_w = -FocCurrent_AdcToCurrent(
                 adc_w, FocCurrent_BiasValue.phase_w_bias_value);
             result.phase_u = -(result.phase_v + result.phase_w);
+            result.phase_u = FocLpf_Update(&FocCurrent_PhaseUFilter,
+                                           result.phase_u);
+            result.phase_v = FocLpf_Update(&FocCurrent_PhaseVFilter,
+                                           result.phase_v);
+            result.phase_w = FocLpf_Update(&FocCurrent_PhaseWFilter,
+                                           result.phase_w);
             FocCurrent_Current = result;
             *phase_current = result;
         }
@@ -130,6 +145,12 @@ void FocCurrent_SamplePhaseCurrent(Foc_PhaseCurrentType * phase_current)
             result.phase_w = -FocCurrent_AdcToCurrent(
                 adc_w, FocCurrent_BiasValue.phase_w_bias_value);
             result.phase_v = -(result.phase_u + result.phase_w);
+            result.phase_u = FocLpf_Update(&FocCurrent_PhaseUFilter,
+                                           result.phase_u);
+            result.phase_v = FocLpf_Update(&FocCurrent_PhaseVFilter,
+                                           result.phase_v);
+            result.phase_w = FocLpf_Update(&FocCurrent_PhaseWFilter,
+                                           result.phase_w);
             FocCurrent_Current = result;
             *phase_current = result;
         }
@@ -148,6 +169,12 @@ void FocCurrent_SamplePhaseCurrent(Foc_PhaseCurrentType * phase_current)
             result.phase_v = -FocCurrent_AdcToCurrent(
                 adc_v, FocCurrent_BiasValue.phase_v_bias_value);
             result.phase_w = -(result.phase_u + result.phase_v);
+            result.phase_u = FocLpf_Update(&FocCurrent_PhaseUFilter,
+                                           result.phase_u);
+            result.phase_v = FocLpf_Update(&FocCurrent_PhaseVFilter,
+                                           result.phase_v);
+            result.phase_w = FocLpf_Update(&FocCurrent_PhaseWFilter,
+                                           result.phase_w);
             FocCurrent_Current = result;
             *phase_current = result;
         }

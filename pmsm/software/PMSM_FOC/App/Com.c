@@ -3,7 +3,7 @@
 
 static UartTransport_t s_transport;
 static ProtoParser_t   s_parser;
-
+float debug[3] = {0.0F};
 
 static void Com_OnFrameReceived(const uint8_t *data, uint16_t len);
 

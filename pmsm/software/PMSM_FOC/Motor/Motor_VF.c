@@ -104,7 +104,6 @@ static float Motor_VF_CalculateVoltage(float frequency_hz)
  */
 static void Motor_VF_OutputVoltage(float voltage_d, float voltage_q)
 {
-    float debug[3] = {0.0F, 0.0F, 0.0F};
     Motor_VfState.VoltageDq.Vd = voltage_d;
     Motor_VfState.VoltageDq.Vq = voltage_q;
 
@@ -144,7 +143,6 @@ static void Motor_VF_RunPreposition(void)
 static void Motor_VF_RunForceDrag(void)
 {
     float voltage_magnitude_v = 0.0F;
-    //float debug[3] = {0.0F, 0.0F};
     if (Motor_VfState.ElectricalFrequencyHz < MOTOR_VF_TARGET_FREQUENCY_HZ)
     {
         Motor_VfState.ElectricalFrequencyHz += MOTOR_VF_FREQUENCY_STEP_HZ;
