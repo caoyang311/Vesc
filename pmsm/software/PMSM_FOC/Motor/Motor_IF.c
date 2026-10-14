@@ -9,11 +9,13 @@
 #include "Pwm.h"
 #include "Sensor_Tamagawa.h"
 #include "Com.h"
+#include <math.h>
 
 #define MOTOR_IF_POLE_PAIRS                 (5U)      /**< 电机极对数 */
 #define MOTOR_IF_CONTROL_FREQUENCY_HZ      (10000.0F) /**< 控制频率 */
 #define MOTOR_IF_CONTROL_PERIOD_S          (1.0F / MOTOR_IF_CONTROL_FREQUENCY_HZ) /**< 控制周期 */
 #define MOTOR_IF_SENSOR_ANGLE_COMPENSATION_S (0.0001F) /**< 角度补偿时间 */
+#define MOTOR_IF_ANGLE_COMPENSATION_SPEED_RPM (300.0F) /**< 角度补偿启用转速 */
 #define MOTOR_IF_TWO_PI                    (6.2831853072F) /**< 2π */
 #define MOTOR_IF_LD                         (0.00028F)    /**< D轴电感 单位：H */
 #define MOTOR_IF_LQ                         (0.00028F)    /**< Q轴电感 单位：H */
@@ -335,9 +337,23 @@ static void Motor_IF_RunForceDrag(void)
  */
 static void Motor_IF_RunCurrentLoop(void)
 {
-    Motor_IF_State.ElectricalAngle =
-        Sensor_Tamagawa_GetPllElectricalPhaseWithOffsetAndLead(
-            MOTOR_IF_SENSOR_ANGLE_COMPENSATION_S);
+    float motor_speed_rpm = 0.0F;
+
+    motor_speed_rpm = Sensor_Tamagawa_GetPllMotorSpeedRpm(
+        MOTOR_IF_POLE_PAIRS);
+
+    if (fabsf(motor_speed_rpm) >= MOTOR_IF_ANGLE_COMPENSATION_SPEED_RPM)
+    {
+        Motor_IF_State.ElectricalAngle =
+            Sensor_Tamagawa_GetPllElectricalPhaseWithOffsetAndLead(
+                MOTOR_IF_SENSOR_ANGLE_COMPENSATION_S);
+    }
+    else
+    {
+        Motor_IF_State.ElectricalAngle =
+            Sensor_Tamagawa_GetElectricalPhaseWithOffset(
+                MOTOR_IF_POLE_PAIRS);
+    }
     // Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
     //     Motor_IF_State.IdReferenceA,
     //     MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A,
