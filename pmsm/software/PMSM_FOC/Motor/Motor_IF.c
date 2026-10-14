@@ -34,7 +34,7 @@
 #define MOTOR_IF_FORCE_DRAG_CURRENT_RAMP_TIME_S (0.2F)  /**< 强拖电流斜坡时间 */
 
 #define MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A (0.0F)    /**< 闭环D轴参考电流 */
-#define MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A (1.0F)    /**< 闭环Q轴参考电流 */
+#define MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A (2.0F)    /**< 闭环Q轴参考电流 */
 #define MOTOR_IF_CLOSED_LOOP_CURRENT_RAMP_TIME_S (0.2F) /**< 闭环电流斜坡时间 */
 /**
  * @brief 预定位计数。
@@ -91,12 +91,15 @@ typedef struct
     Foc_Curr_AlphaBetaType CurrentAlphaBeta; /**< 电流AlphaBeta */
     Foc_Curr_DqType CurrentDq; /**< 电流Dq */
     Foc_VoltageLimitType VoltageLimit; /**< 电压限制 */
-    uint16_t ElectricalAngle; /**< 电气相位 */
+    uint16_t ElectricalAngle; /**< 原始电气相位 */
+    uint16_t DifferentialElectricalAngle; /**< 差分电气相位 */
+    uint16_t PllElectricalAngle; /**< PLL电气相位 */
     uint32_t PrepositionTick; /**< 预定位计数 */
     float ElectricalFrequencyHz; /**< 电气频率 */
     float ElectricalSpeed; /**< FOC使用的电气速度 */
     float DifferentialElectricalSpeed; /**< 差分滤波电气速度 */
     float PllElectricalSpeed; /**< PLL电气速度 */
+    float_t MotorSpeedRpm; /**< 电机转速 */
     float IdReferenceA; /**< 当前D轴参考电流 */
     float IqReferenceA; /**< 当前Q轴参考电流 */
     float InputPowerW; /**< 电机输入功率，单位为瓦特 */
@@ -194,6 +197,9 @@ static void Motor_IF_FocRun(void)
             Sensor_Tamagawa_GetPllElectricalAngularSpeedRadS();
         Motor_IF_State.ElectricalSpeed =
             Motor_IF_State.PllElectricalSpeed;
+        //Motor_IF_State.MotorSpeedRpm = Sensor_Tamagawa_GetMotorSpeedRpm(MOTOR_IF_POLE_PAIRS);    
+        Motor_IF_State.MotorSpeedRpm = Sensor_Tamagawa_GetPllMotorSpeedRpm(MOTOR_IF_POLE_PAIRS);
+
     }
     else
     {
@@ -259,12 +265,15 @@ static void Motor_IF_FocRun(void)
     // debug[0] = Motor_IF_State.Current.phase_u;
     // debug[1] = Motor_IF_State.Current.phase_v;
     // debug[2] = Motor_IF_State.Current.phase_w;
-    debug[0] = Motor_IF_State.DifferentialElectricalSpeed;
-    debug[1] = Motor_IF_State.PllElectricalSpeed;
-    debug[2] = Motor_IF_State.ElectricalSpeed;
+    // debug[0] = Motor_IF_State.DifferentialElectricalSpeed;
+    // debug[1] = Motor_IF_State.PllElectricalSpeed;
+    // debug[2] = Motor_IF_State.ElectricalSpeed;
     // debug[0] = Motor_IF_State.PwmCompare.compare_u;
     // debug[1] = Motor_IF_State.PwmCompare.compare_v;
-    // debug[2] = Motor_IF_State.PwmCompare.compare_w;    
+    // debug[2] = Motor_IF_State.PwmCompare.compare_w;  
+    debug[0] = Motor_IF_State.DifferentialElectricalSpeed;
+    debug[1] = Motor_IF_State.PllElectricalSpeed;
+    debug[2] = Motor_IF_State.MotorSpeedRpm;       
     Com_Uart_SendJustFloat(debug, 3);
 }
 /**
@@ -354,6 +363,15 @@ static void Motor_IF_RunCurrentLoop(void)
             Sensor_Tamagawa_GetElectricalPhaseWithOffset(
                 MOTOR_IF_POLE_PAIRS);
     }
+        // Motor_IF_State.ElectricalAngle =
+        //     Sensor_Tamagawa_GetElectricalPhaseWithOffset(
+        //         MOTOR_IF_POLE_PAIRS);  
+        // Motor_IF_State.ElectricalAngle =
+        //     Sensor_Tamagawa_GetElectricalPhaseWithOffsetAndLead(
+        //         MOTOR_IF_POLE_PAIRS,MOTOR_IF_SENSOR_ANGLE_COMPENSATION_S);     
+        // Motor_IF_State.PllElectricalAngle =
+        //     Sensor_Tamagawa_GetPllElectricalPhaseWithOffsetAndLead(
+        //         MOTOR_IF_SENSOR_ANGLE_COMPENSATION_S);      
     // Motor_IF_State.IdReferenceA = Motor_IF_RampReference(
     //     Motor_IF_State.IdReferenceA,
     //     MOTOR_IF_CLOSED_LOOP_ID_REFERENCE_A,
@@ -363,7 +381,7 @@ static void Motor_IF_RunCurrentLoop(void)
     //     MOTOR_IF_CLOSED_LOOP_IQ_REFERENCE_A,
     //     MOTOR_IF_CLOSED_LOOP_CURRENT_STEP_A);
     Motor_IF_State.IdReferenceA = 0;
-    Motor_IF_State.IqReferenceA = 1.0F;
+    Motor_IF_State.IqReferenceA = 1.5F;
     Motor_IF_FocRun();
 }
 /**
@@ -526,8 +544,7 @@ void Motor_IF_ControlFunction(void)
                 Motor_IF_RunCurrentLoop();
                 Motor_IF_State.InputPowerW = Motor_IF_CalculateInputPowerW();
                 Motor_IF_State.OutputPowerW = Motor_IF_CalculateOutputPowerW();
-                Motor_IF_State.EfficiencyPercent =
-                    Motor_IF_CalculateEfficiencyPercent();
+                Motor_IF_State.EfficiencyPercent = Motor_IF_CalculateEfficiencyPercent();
                 break;
 
             default:
