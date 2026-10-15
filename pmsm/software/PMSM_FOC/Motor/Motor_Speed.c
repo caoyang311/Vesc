@@ -4,6 +4,7 @@
 #include "FocTrigTable.h"
 #include "FocCurrent.h"
 #include "Sensor_Tamagawa.h"
+#include "Motor.h"
 #include "Com.h"
 #include "Pwm.h"
 #include <math.h>
@@ -13,7 +14,7 @@
 #define MOTOR_SPEED_LOOP_PERIOD_S             (0.001F) /**< 速度环周期 */
 #define MOTOR_SPEED_LOOP_DIVIDER              ((uint32_t)(MOTOR_SPEED_LOOP_PERIOD_S / MOTOR_SPEED_CONTROL_PERIOD_S)) /**< 速度环分频 */
 #define MOTOR_SPEED_REFERENCE_RPM_DEFAULT     (0.0F) /**< 默认速度参考 */
-#define MOTOR_SPEED_SENSOR_ANGLE_COMPENSATION_S (0.0001F) /**< 角度补偿时间 */
+#define MOTOR_SPEED_SENSOR_ANGLE_COMPENSATION_S (0.00015F) /**< 角度补偿时间 */
 #define MOTOR_SPEED_ANGLE_COMPENSATION_SPEED_RPM (300.0F) /**< 角度补偿启用转速 */
 #define MOTOR_SPEED_TWO_PI                    (6.2831853072F) /**< 2π */
 #define MOTOR_SPEED_LD                         (0.00028F)    /**< D轴电感 单位：H */

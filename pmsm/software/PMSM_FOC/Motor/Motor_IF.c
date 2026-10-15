@@ -14,7 +14,7 @@
 #define MOTOR_IF_POLE_PAIRS                 (5U)      /**< 电机极对数 */
 #define MOTOR_IF_CONTROL_FREQUENCY_HZ      (10000.0F) /**< 控制频率 */
 #define MOTOR_IF_CONTROL_PERIOD_S          (1.0F / MOTOR_IF_CONTROL_FREQUENCY_HZ) /**< 控制周期 */
-#define MOTOR_IF_SENSOR_ANGLE_COMPENSATION_S (0.0001F) /**< 角度补偿时间 */
+#define MOTOR_IF_SENSOR_ANGLE_COMPENSATION_S (0.00015F) /**< 角度补偿时间 */
 #define MOTOR_IF_ANGLE_COMPENSATION_SPEED_RPM (300.0F) /**< 角度补偿启用转速 */
 #define MOTOR_IF_TWO_PI                    (6.2831853072F) /**< 2π */
 #define MOTOR_IF_LD                         (0.00028F)    /**< D轴电感 单位：H */

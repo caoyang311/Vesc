@@ -1,7 +1,8 @@
 #ifndef MOTOR_SPEED_H
 #define MOTOR_SPEED_H
 
-#include "Motor.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 void Motor_Speed_Init(void);
 void Motor_Speed_MainFunction(void);

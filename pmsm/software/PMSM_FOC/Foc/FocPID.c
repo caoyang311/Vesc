@@ -16,8 +16,8 @@
 #define IQ_LOWER_LIMIT   ((float)(-32.0f))
 #define IQ_UPPER_LIMIT   ((float)(32.0f))
 //速度环PID
-#define PID_SPEED_KP_DEFAULT       ((float)(0.5f))
-#define PID_SPEED_KI_DEFAULT       ((float)(500.0f))
+#define PID_SPEED_KP_DEFAULT       ((float)(0.0174f))
+#define PID_SPEED_KI_DEFAULT       ((float)(1.095f))
 #define PID_SPEED_KD_DEFAULT       ((float)(0.0f))
 //速度PID输出限幅
 #define PID_SPEED_LOWER_LIMIT   ((float)(-10.0f))
