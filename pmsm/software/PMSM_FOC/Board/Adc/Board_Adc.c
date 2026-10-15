@@ -3,7 +3,7 @@
 #include "Motor.h"
 #include "Motor_VF.h"
 #include "Motor_IF.h"
-#include "Sensor_Tamagawa.h"
+#include "Motor_Speed.h"
 #include "Dio.h"
 #include <stddef.h>
 #include <tim.h>
@@ -390,7 +390,6 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
 
     if (hadc == &hadc2)
     {
-        //Sensor_Tamagawa_ProcessAngle();/*处理角度*/
 
         if (Motor_GetMode() == MOTOR_MODE_VF)
         {
@@ -400,11 +399,14 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
         {
             Motor_IF_ControlFunction();
         }
+        else if (Motor_GetMode() == MOTOR_MODE_SPEED)
+        {
+            Motor_Speed_ControlFunction();
+        }
         else
         {
         }
 
-        //Sensor_Tamagawa_RequestAngle();/*请求角度*/
     }
     Dio_WriteChannel(DIO_CHANNEL_TEST, STD_LOW);
 }

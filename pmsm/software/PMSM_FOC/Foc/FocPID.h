@@ -42,7 +42,11 @@ void Current_PID_Calc(float Reference,
 void Current_PID_LimitIntegralDq(PID_Struct *d_axis_pid,
                                  PID_Struct *q_axis_pid,
                                  const Foc_VoltageLimitType *voltage_limit);
-void Speed_PID_Calc(float Reference, float Feedback,PID_Struct *PID_Struct,float *output);
+void Speed_PID_Calc(float Reference,
+                    float Feedback,
+                    PID_Struct *PID_Struct,
+                    float sample_period_s,
+                    float *output);
 /*------------------------------------test------------------------------------*/
 #endif
 

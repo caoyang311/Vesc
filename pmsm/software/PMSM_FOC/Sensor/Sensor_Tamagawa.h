@@ -14,27 +14,13 @@
 void Sensor_Tamagawa_Init(void);
 void Sensor_Tamagawa_ProcessAngle(void);
 void Sensor_Tamagawa_RequestAngle(void);
-void Sensor_Tamagawa_SampleSpeed(float sample_period_s, uint8_t pole_pairs);
-void Sensor_Tamagawa_UpdatePll(float sample_period_s,
-                               uint8_t pole_pairs);
-void Sensor_Tamagawa_ClearNewData(void);
-uint32_t Sensor_Tamagawa_GetRawCount(void);
-float Sensor_Tamagawa_GetMechanicalAngleRad(void);
-float Sensor_Tamagawa_GetMechanicalAngularSpeedRadS(void);
-float Sensor_Tamagawa_GetElectricalAngularSpeedRadS(void);
-float Sensor_Tamagawa_GetMotorSpeedRpm(void);
-float Sensor_Tamagawa_GetElectricalAngleRad(uint8_t pole_pairs);
+void Sensor_Tamagawa_SampleSpeed(float sample_period_s,uint8_t pole_pairs);
 uint16_t Sensor_Tamagawa_GetElectricalPhase(uint8_t pole_pairs);
 uint16_t Sensor_Tamagawa_GetElectricalPhaseWithOffset(uint8_t pole_pairs);
-uint16_t Sensor_Tamagawa_GetElectricalPhaseWithOffsetAndLead(
-    uint8_t pole_pairs,
-    float compensation_time_s);
-uint16_t Sensor_Tamagawa_GetPllElectricalPhaseWithOffsetAndLead(
-    float compensation_time_s);
-float Sensor_Tamagawa_GetPllElectricalAngularSpeedRadS(void);
-float Sensor_Tamagawa_GetPllMotorSpeedRpm(uint8_t pole_pairs);
+uint16_t Sensor_Tamagawa_GetElectricalPhaseWithCompensation(float compensation_time_s);
+float Sensor_Tamagawa_GetElectricalAngularSpeedRadS(void);
+float Sensor_Tamagawa_GetMotorSpeedRpm(uint8_t pole_pairs,float electrical_speed);
 void Sensor_Tamagawa_SetElectricalPhaseOffset(uint16_t offset);
 bool Sensor_Tamagawa_IsElectricalOffsetValid(void);
-void Sensor_Tamagawa_ClearDataValid(void);
 
 #endif /* SENSOR_TAMAGAWA_H */

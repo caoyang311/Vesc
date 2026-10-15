@@ -201,11 +201,15 @@ void Current_PID_Calc(float Reference,
   * @retval void
   */
 void Speed_PID_Calc(float Reference,
-                      float Feedback,PID_Struct *PID_Struct,float *output)
+                    float Feedback,
+                    PID_Struct *PID_Struct,
+                    float sample_period_s,
+                    float *output)
 {
- 
-    float Error, Proportional_Term,Integral_Term;	
-    float M1_dwAux; 
+    float Error = 0.0F;
+    float Proportional_Term = 0.0F;
+    float Integral_Term = 0.0F;
+    float M1_dwAux = 0.0F;
 #ifdef DIFFERENTIAL_TERM_ENABLED    
     float Differential_Term;
 #endif  
@@ -222,7 +226,7 @@ void Speed_PID_Calc(float Reference,
       }
       else
       { 
-        Integral_Term = (PID_Struct->Ki_Gain * Error);
+        Integral_Term = PID_Struct->Ki_Gain * Error * sample_period_s;
         M1_dwAux = PID_Struct->Integral + Integral_Term;
         //积分限幅
         if (M1_dwAux > PID_Struct->Upper_Limit_Integral)
