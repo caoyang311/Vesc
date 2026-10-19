@@ -5,5 +5,5 @@
 
 void Motor_Identification_Init(void);
 void Motor_Identification_MainFunction(void);
-
+void Motor_Identification_ControlFunction(void);
 #endif /* MOTOR_IDENTIFICATION_H */

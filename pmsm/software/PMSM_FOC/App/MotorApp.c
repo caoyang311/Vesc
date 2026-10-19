@@ -3,11 +3,14 @@
 #include "Key.h"
 #include "Led.h"
 #include "Motor.h"
+#include "Motor_Speed.h"
 
-#define MOTOR_APP_LED_BLINK_PERIOD_MS (500U)
+#define MOTOR_APP_LED_BLINK_PERIOD_MS       (500U)
+#define MOTOR_APP_SPEED_REFERENCE_RPM       (50.0F)
 
 static uint8_t MotorApp_PreviousKeyStates = 0U;
 static uint8_t MotorApp_PreviousMotorRunning = 0U;
+static float MotorApp_ReferenceRpm = 0.0F;
 
 static void MotorApp_HandleKeys(void);
 static void MotorApp_HandleLed(void);
@@ -44,39 +47,60 @@ static void MotorApp_HandleKeys(void)
 
     if (MotorApp_IsKeyPressed(current_key_states, KEY_STATE_MASK(KEY_ID_0)) != 0U)
     {
-        Motor_Start();
+        if (Motor_GetIsRunning() == false)
+        {
+            Motor_Start();
+        }
+        else
+        {
+            Motor_Stop();
+        }
     }
     else
     {
-        /* KEY0 当前没有新的按下事件。 */
     }
 
     if (MotorApp_IsKeyPressed(current_key_states, KEY_STATE_MASK(KEY_ID_1)) != 0U)
     {
-        Motor_Stop();
+        if (MotorApp_ReferenceRpm > 2000.0F)
+        {
+            MotorApp_ReferenceRpm -= MOTOR_APP_SPEED_REFERENCE_RPM;
+        }
+        else {
+            MotorApp_ReferenceRpm += MOTOR_APP_SPEED_REFERENCE_RPM;
+        }
+        Motor_Speed_SetReferenceRpm(MotorApp_ReferenceRpm);
+        if (Motor_GetIsRunning() == false)
+        {
+            Motor_SetMode(MOTOR_MODE_SPEED);
+        }
+        else
+        {
+        }
     }
     else
     {
-        /* KEY1 当前没有新的按下事件。 */
     }
 
     if (MotorApp_IsKeyPressed(current_key_states, KEY_STATE_MASK(KEY_ID_2)) != 0U)
     {
-
-            Motor_ModeType next_mode =(Motor_ModeType)(Motor_GetMode() + 1U);
-            if (next_mode >= MOTOR_MODE_COUNT)
-            {
-                next_mode = MOTOR_MODE_VF;
-            }
-            else
-            {
-                /* 当前模式切换有效。 */
-            }
-            Motor_SetMode(next_mode);
+        if (Motor_GetMode() == MOTOR_MODE_IDENTIFICATION)
+        {
+            Motor_Stop();
+            Motor_SetMode(MOTOR_MODE_IF);
+        }
+        else if (Motor_GetIsRunning() == false)
+        {
+            Motor_SetMode(MOTOR_MODE_IDENTIFICATION);
+        }
+        else
+        {
+            Motor_Stop();
+            Motor_SetMode(MOTOR_MODE_IDENTIFICATION);
+        }
     }
     else
     {
-        /* KEY2 当前没有新的按下事件。 */
     }
 
     MotorApp_PreviousKeyStates = current_key_states;

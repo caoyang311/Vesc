@@ -96,7 +96,7 @@ typedef struct
     uint32_t PrepositionTick; /**< 预定位计数 */
     float ElectricalFrequencyHz; /**< 电气频率 */
     float ElectricalSpeed; /**< 电气角速度 */
-    float_t MotorSpeedRpm; /**< 电机转速 */
+    float MotorSpeedRpm; /**< 电机转速 */
     float IdReferenceA; /**< 当前D轴参考电流 */
     float IqReferenceA; /**< 当前Q轴参考电流 */
     float InputPowerW; /**< 电机输入功率，单位为瓦特 */

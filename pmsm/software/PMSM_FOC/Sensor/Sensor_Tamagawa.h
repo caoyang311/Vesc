@@ -9,7 +9,7 @@
 #define SENSOR_TAMAGAWA_RESOLUTION          (131072U) /**< 分辨率 */
 #define SENSOR_TAMAGAWA_COUNT_MASK         (SENSOR_TAMAGAWA_RESOLUTION - 1U) /**< 有效位掩码 */
 #define SENSOR_TAMAGAWA_TWO_PI             (6.28318530717958647692F) /**< 2π */
-#define SENSOR_TAMAGAWA_UPDATE_PERIOD_S    (0.001F)
+#define SENSOR_TAMAGAWA_UPDATE_PERIOD_S    (0.001F) /**< 更新周期 */
 
 void Sensor_Tamagawa_Init(void);
 void Sensor_Tamagawa_ProcessAngle(void);

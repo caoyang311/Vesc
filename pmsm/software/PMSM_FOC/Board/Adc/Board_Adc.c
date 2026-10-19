@@ -4,6 +4,7 @@
 #include "Motor_VF.h"
 #include "Motor_IF.h"
 #include "Motor_Speed.h"
+#include "Motor_Identification.h"
 #include "Dio.h"
 #include <stddef.h>
 #include <tim.h>
@@ -402,6 +403,10 @@ void HAL_ADCEx_InjectedConvCpltCallback(ADC_HandleTypeDef *hadc)
         else if (Motor_GetMode() == MOTOR_MODE_SPEED)
         {
             Motor_Speed_ControlFunction();
+        }
+        else if (Motor_GetMode() == MOTOR_MODE_IDENTIFICATION)
+        {
+            Motor_Identification_ControlFunction();
         }
         else
         {
