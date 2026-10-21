@@ -44,65 +44,47 @@ void MotorApp_Init(void)
 static void MotorApp_HandleKeys(void)
 {
     uint8_t current_key_states = Key_GetStateMask();
-
+    Motor_ModeType motor_mode = Motor_GetMode();
     if (MotorApp_IsKeyPressed(current_key_states, KEY_STATE_MASK(KEY_ID_0)) != 0U)
     {
         if (Motor_GetIsRunning() == false)
         {
             Motor_Start();
+            MotorApp_ReferenceRpm = 0.0F;
         }
         else
         {
             Motor_Stop();
+            MotorApp_ReferenceRpm = 0.0F;
         }
-    }
-    else
-    {
     }
 
     if (MotorApp_IsKeyPressed(current_key_states, KEY_STATE_MASK(KEY_ID_1)) != 0U)
     {
-        if (MotorApp_ReferenceRpm > 2000.0F)
+        if (motor_mode == MOTOR_MODE_SPEED)
         {
-            MotorApp_ReferenceRpm -= MOTOR_APP_SPEED_REFERENCE_RPM;
-        }
-        else {
             MotorApp_ReferenceRpm += MOTOR_APP_SPEED_REFERENCE_RPM;
+            if (MotorApp_ReferenceRpm >= 3000.0F)
+            {
+                MotorApp_ReferenceRpm = 3000.0F;
+            }
+            Motor_Speed_SetReferenceRpm(MotorApp_ReferenceRpm);           
         }
-        Motor_Speed_SetReferenceRpm(MotorApp_ReferenceRpm);
-        if (Motor_GetIsRunning() == false)
-        {
-            Motor_SetMode(MOTOR_MODE_SPEED);
-        }
-        else
-        {
-        }
-    }
-    else
-    {
+
     }
 
     if (MotorApp_IsKeyPressed(current_key_states, KEY_STATE_MASK(KEY_ID_2)) != 0U)
     {
-        if (Motor_GetMode() == MOTOR_MODE_IDENTIFICATION)
+        if (motor_mode == MOTOR_MODE_SPEED)
         {
-            Motor_Stop();
-            Motor_SetMode(MOTOR_MODE_IF);
-        }
-        else if (Motor_GetIsRunning() == false)
-        {
-            Motor_SetMode(MOTOR_MODE_IDENTIFICATION);
-        }
-        else
-        {
-            Motor_Stop();
-            Motor_SetMode(MOTOR_MODE_IDENTIFICATION);
+            MotorApp_ReferenceRpm -= MOTOR_APP_SPEED_REFERENCE_RPM;
+            if (MotorApp_ReferenceRpm <= 0.0F)
+            {
+                MotorApp_ReferenceRpm = 0.0F;
+            }
+            Motor_Speed_SetReferenceRpm(MotorApp_ReferenceRpm);        
         }
     }
-    else
-    {
-    }
-
     MotorApp_PreviousKeyStates = current_key_states;
 }
 /**
