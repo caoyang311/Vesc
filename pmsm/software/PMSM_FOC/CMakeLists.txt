@@ -75,6 +75,15 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/Fifo.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/Justfloat.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/Protocol.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_core/SVPWM_tiaozhi.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_core/foc_pi.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_core/foc_globals.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_core/foc_ctrl.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_core/fault_protect.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_core/Common_Math.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_core/Axis_transform.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_map/MapRegen.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_map/Id_2D_Map.c
 )
 
 # Add include paths
@@ -93,6 +102,9 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/APP/
     ${CMAKE_CURRENT_SOURCE_DIR}/Protocol/
     ${CMAKE_CURRENT_SOURCE_DIR}/Sensor/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_core/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/model/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_map/    
 )
 
 # Add project symbols (macros)
