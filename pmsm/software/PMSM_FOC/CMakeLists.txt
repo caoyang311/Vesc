@@ -84,6 +84,12 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_core/Axis_transform.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_map/MapRegen.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_map/Id_2D_Map.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_hal/encoder_foc_sdk.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_hal/encoder_pwm_u.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_hal/hall_sensor.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_hal/pwm_isr.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_hal/signal_proc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_hal/temp_sensor.c
 )
 
 # Add include paths
@@ -104,7 +110,8 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Sensor/
     ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_core/
     ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/model/
-    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_map/    
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_map/
+    ${CMAKE_CURRENT_SOURCE_DIR}/Foc_ZQ/foc_hal/    
 )
 
 # Add project symbols (macros)
